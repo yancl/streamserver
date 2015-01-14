@@ -1,6 +1,6 @@
 all: 
-	thrift -out processor/gen-cpp --gen cpp protocol/DeepScorerService.thrift
-	thrift -out acceptor/gen-go --gen go protocol/DeepScorerService.thrift
+	thrift -out processor/gen-cpp --gen cpp if/DeepScorerService.thrift
+	thrift -out acceptor/gen-go --gen go if/DeepScorerService.thrift
 
 clean:
 	rm -rf processor/gen-cpp/*
