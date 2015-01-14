@@ -1,0 +1,2 @@
+curl -v -include -H "Transfer-Encoding: chunked" --form key=value --form filename=@/home/yancl/downloads/boost_1_57_0.tar.bz2 http://localhost:8081/upload
+#curl -v -include --form key=value --form filename=@uploads/test.txt http://localhost:8081/upload
