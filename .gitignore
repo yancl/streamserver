@@ -1,3 +1,4 @@
 acceptor/downloads/*
 acceptor/gen-go/*
 processor/gen-cpp/*
+processor/src/stream_server
