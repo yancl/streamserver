@@ -1,11 +1,11 @@
 all:
-	g++ -o ../bin/stream_server \
-	stream_server.cpp \
+	g++ -o ../bin/deep_score_server \
+	deep_score_server.cpp \
 	env_default.cpp \
-	gen-cpp/DeepScorerService_constants.cpp \
+	gen-cpp/deep_score_service_constants.cpp \
 	gen-cpp/DeepScorerService.cpp \
-	gen-cpp/DeepScorerService_types.cpp \
+	gen-cpp/deep_score_service_types.cpp \
 	-L/usr/local/lib/ -L/usr/lib64/ -lthrift -lthriftnb -levent -lboost_system -lpthread -lrt
 
 clean:
-	rm -f ../bin/stream_server
+	rm -f ../bin/deep_score_server

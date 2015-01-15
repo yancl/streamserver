@@ -22,7 +22,7 @@
 // @author Anthony Giardullo
 
 #include "include/common.h"
-#include "include/stream_server.h"
+#include "include/deep_score_server.h"
 
 using namespace apache::thrift::concurrency;
 
