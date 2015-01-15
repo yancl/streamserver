@@ -1,5 +1,5 @@
 all:
-	g++ -o stream_server \
+	g++ -o ../bin/stream_server \
 	stream_server.cpp \
 	env_default.cpp \
 	../gen-cpp/DeepScorerService_constants.cpp \
@@ -8,4 +8,4 @@ all:
 	-L/usr/local/lib/ -L/usr/lib64/ -lthrift -lthriftnb -levent -lboost_system -lpthread -lrt
 
 clean:
-	rm -f stream_server
+	rm -f ../bin/stream_server
