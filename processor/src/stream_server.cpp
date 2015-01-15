@@ -21,8 +21,8 @@
 // @author Avinash Lakshman
 // @author Anthony Giardullo
 
-#include "../include/common.h"
-#include "../include/stream_server.h"
+#include "include/common.h"
+#include "include/stream_server.h"
 
 using namespace apache::thrift::concurrency;
 

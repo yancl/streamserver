@@ -21,8 +21,8 @@
 // @author Avinash Lakshman
 // @author Anthony Giardullo
 
-#include "../include/common.h"
-#include "../include/stream_server.h"
+#include "include/common.h"
+#include "include/stream_server.h"
 
 using namespace apache::thrift;
 using namespace apache::thrift::protocol;
@@ -122,7 +122,7 @@ void scribe::startServer() {
                                         ));
   g_Handler->setServer(server);
 
-  LOG_OPER("Starting scribe server on port %lu", g_Handler->port);
+  LOG_OPER("Starting stream server on port %lu", g_Handler->port);
   fflush(stderr);
 
   // throttle concurrent connections
