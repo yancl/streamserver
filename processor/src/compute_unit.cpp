@@ -1,4 +1,5 @@
 #include "include/compute_unit.h"
+#include <pthread.h>
 
 void* threadStatic(void *this_ptr) {
   ComputeUnit *compute_ptr = (ComputeUnit*)this_ptr;
@@ -22,31 +23,33 @@ void ComputeUnit::threadMember() {
 
 
 void ComputeUnit::compute() {
-  cout<< "enter compute unit" << endl;
+  cout<< "enter compute unit..." << endl;
   bool stop = false;
   while (!stop) {
     //one message contains (BEING,{MIDDLE,...},END) slices
     //slice compose the message stream
     this->computeMessage();
   }
-  cout<< "exit compute unit" << endl;
+  cout<< "exit compute unit..." << endl;
 }
 
 void ComputeUnit::computeMessage() {
     //state machine start!
+    bool meet_message_begin = false;
     while(true) {
-      bool meet_message_begin = false;
+      sleep(1);
       bool failed = false;
       string err = "";
       Slice* slice = _store->getSlice();
       if (slice == NULL) {
-        cerr << "found one NULL slice!" << endl;
-        return;
+        continue;
+        //cerr << "found one NULL slice!" << endl;
+        //return;
       }
 
-      if(slice->_flag == BEGIN) {
+      if(slice->_flag == SliceFlag::START) {
         //compute process start
-        cout << "process message header part!" << endl;
+        cout << pthread_self() <<"process message header part!" << endl;
 
         //duplicated message?
         if (meet_message_begin) {
@@ -59,7 +62,7 @@ void ComputeUnit::computeMessage() {
         //core code begin
 
         //core code end
-      } else if (slice->_flag == MIDDLE) {
+      } else if (slice->_flag == SliceFlag::MIDDLE) {
         if (!meet_message_begin) {
           err = "unorder message happend!";
           failed = true;
@@ -70,7 +73,7 @@ void ComputeUnit::computeMessage() {
         //core code begin
 
         //core code end
-      } else if (slice->_flag == END) {
+      } else if (slice->_flag == SliceFlag::FINISH) {
         if (!meet_message_begin) {
           err = "unorder message happend!";
           failed = true;
@@ -86,7 +89,7 @@ void ComputeUnit::computeMessage() {
         //compute over
         delete slice;
         return;
-      } else if (slice->_flag == BROKEN) {
+      } else if (slice->_flag == SliceFlag::BROKEN) {
         //part of the message will not show,maybe sender restart or send timeout,etc
         //what we will do is to drop the compute?
         //

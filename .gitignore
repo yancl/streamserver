@@ -1,5 +1,5 @@
 acceptor/downloads/*
 acceptor/gen-go/*
 processor/gen-cpp/*
-processor/bin/stream_server
-acceptor/src/git-wip-us.apache.org/
+processor/bin/stream_server/
+acceptor/src/git.apache.org/

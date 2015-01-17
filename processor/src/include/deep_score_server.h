@@ -36,7 +36,7 @@ class StreamHandler : virtual public DeepScorerServiceIf {
   ~StreamHandler();
 
   void initialize();
-  ResultCode::type AddDataEntryStream(const std::vector<DataEntry> & messages);
+  ResultCode::type AddDataSliceStream(const std::vector<DataSlice> & slices);
 
   unsigned long int port; // it's long because that's all I implemented in the conf class
 

@@ -102,14 +102,14 @@ func SendNotify(key string, message string) bool {
 	return false
 }
 
-func sendMessage(client *deep_score_service.DeepScorerServiceClient, message *deep_score_service.DataEntry) error {
+func sendMessage(client *deep_score_service.DeepScorerServiceClient, message *deep_score_service.DataSlice) error {
   //compose messages
 	capacity := 1 
-	messages := make([]*deep_score_service.DataEntry, 0, capacity)
+	messages := make([]*deep_score_service.DataSlice, 0, capacity)
   messages = append(messages, message)
 
 	//send messages
-	r, err := client.AddDataEntryStream(messages)
+	r, err := client.AddDataSliceStream(messages)
 	if err != nil {
 		fmt.Printf("add messages failed,err:%s \n", err)
 	} else {
@@ -135,6 +135,10 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
 	key := "yancl"
 
+  host := "127.0.0.1"
+  var port int32
+  port = 8081
+
   addr := "localhost:1463"
   rich_client, err := acceptor.NewDataStreamClient(addr)
   if err != nil {
@@ -146,6 +150,7 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
   defer rich_client.Transport.Close()
 
   var number int32
+  var slice_flag deep_score_service.SliceFlag = deep_score_service.SliceFlag_START
   //send data
 	for {
 		part, err := mr.NextPart()
@@ -168,13 +173,15 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 			read = read + int64(size)
 			//fmt.Printf("read: %v \n",read )
 			wf.Write(buffer[0:size])
-      sendMessage(rich_client.Client, &deep_score_service.DataEntry{Key: key, Val: buffer[0:size], Number: number, Last: false})
+      sendMessage(rich_client.Client, &deep_score_service.DataSlice{Key: key, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: host, Port: port})
+      slice_flag = deep_score_service.SliceFlag_MIDDLE
       number += 1
 		}
 	}
 
   //send last message
-  sendMessage(rich_client.Client, &deep_score_service.DataEntry{Key: key, Val: nil, Number: number, Last: true})
+  slice_flag = deep_score_service.SliceFlag_FINISH
+  sendMessage(rich_client.Client, &deep_score_service.DataSlice{Key: key, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
 
 	result := WaitForNotify(key)
 	fmt.Fprintf(w, "result is:%s \n", result)
@@ -196,5 +203,6 @@ func main() {
 
 	http.HandleFunc("/upload", UploadStream)
 	http.HandleFunc("/notify", NotifyStream)
+  fmt.Printf("start acceptor at 127.0.0.1:8081!\n")
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }

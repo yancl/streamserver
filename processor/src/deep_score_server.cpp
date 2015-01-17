@@ -124,11 +124,11 @@ void StreamHandler::initialize() {
   }
 }
 
-ResultCode::type StreamHandler::AddDataEntryStream(const std::vector<DataEntry, std::allocator<DataEntry> >& entries) {
-  std::vector<DataEntry>::const_iterator citr = entries.begin();
-  for (;citr != entries.end(); citr++) {
+ResultCode::type StreamHandler::AddDataSliceStream(const std::vector<DataSlice, std::allocator<DataSlice> >& slices) {
+  std::vector<DataSlice>::const_iterator citr = slices.begin();
+  for (;citr != slices.end(); citr++) {
     uint32_t num = scribe::strhash::hash32(citr->key.c_str());
-    Slice slice(citr->key, citr->val, citr->number, BROKEN, citr->host, citr->port);
+    Slice slice(citr->key, citr->val, citr->number, citr->flag, citr->host, citr->port);
     (_compute_units[num % TOTAL_COMPUTE_THREAD_NUM])->addSlice(slice);
   }
   cout << "add data entry" << endl;
