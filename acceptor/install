@@ -7,7 +7,7 @@ fi
 
 CURDIR=`pwd`
 OLDGOPATH="$GOPATH"
-export GOPATH="$CURDIR"
+export GOPATH="$CURDIR":src/gen-go/
 
 gofmt -w src
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"acceptor"
 	"config"
 	"fmt"
 	"io"
@@ -10,7 +11,6 @@ import (
 	"os"
 	"sync"
 	"time"
-  "acceptor"
 )
 
 // 1MB, more data will write to disk file tempory
@@ -140,6 +140,8 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	acceptor.TestThriftClient("localhost:1463")
+
 	key := "key"
 	result := WaitForNotify(key)
 	fmt.Fprintf(w, "result is:%s \n", result)
@@ -156,11 +158,10 @@ func NotifyStream(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "send message ok for key:%s!\n", key)
 }
 
-
 func main() {
 	config.LoadConfig()
-  
-  acceptor.TestThriftClient("localhost:1463")
+
+	//acceptor.TestThriftClient("localhost:1463")
 
 	http.HandleFunc("/upload", UploadStream)
 	http.HandleFunc("/notify", NotifyStream)
