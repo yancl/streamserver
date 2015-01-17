@@ -24,7 +24,10 @@
 #ifndef SCRIBE_SERVER_H
 #define SCRIBE_SERVER_H
 
+#include "compute_unit.h"
 #include "../gen-cpp/DeepScorerService.h"
+
+const int TOTAL_COMPUTE_THREAD_NUM = 16;
 
 class StreamHandler : virtual public DeepScorerServiceIf {
 
@@ -76,6 +79,10 @@ class StreamHandler : virtual public DeepScorerServiceIf {
   StreamHandler();
   StreamHandler(const StreamHandler& rhs);
   const StreamHandler& operator=(const StreamHandler& rhs);
+
+private:
+  pthread_t _thread_handlers[TOTAL_COMPUTE_THREAD_NUM];
+  ComputeUnit* _compute_units[TOTAL_COMPUTE_THREAD_NUM];
 };
 extern boost::shared_ptr<StreamHandler> g_Handler;
 #endif // SCRIBE_SERVER_H

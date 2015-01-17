@@ -2,6 +2,8 @@ all:
 	g++ -o ../bin/deep_score_server \
 	deep_score_server.cpp \
 	env_default.cpp \
+	compute_unit.cpp \
+	store.cpp \
 	gen-cpp/deep_score_service_constants.cpp \
 	gen-cpp/DeepScorerService.cpp \
 	gen-cpp/deep_score_service_types.cpp \
