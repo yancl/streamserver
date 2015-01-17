@@ -3,8 +3,12 @@ package acceptor
 import (
 	"deep_score_service"
 	"fmt"
-	"git.apache.org/thrift.git/lib/go/thrift"
+	//"git.apache.org/thrift.git/lib/go/thrift"
+  "git-wip-us.apache.org/repos/asf/thrift.git/lib/go/thrift"
 )
+
+
+
 
 func handleClient(client *deep_score_service.DeepScorerServiceClient) (err error) {
 	//compose messages
@@ -43,6 +47,29 @@ func runClient(transportFactory thrift.TTransportFactory, protocolFactory thrift
 		return err
 	}
 	return handleClient(deep_score_service.NewDeepScorerServiceClientFactory(transport, protocolFactory))
+}
+
+type RichClient struct {
+  Client *deep_score_service.DeepScorerServiceClient
+	Transport thrift.TTransport
+}
+
+func NewDataStreamClient(addr string) (*RichClient, error) {
+	transportFactory := thrift.NewTFramedTransportFactory(thrift.NewTTransportFactory())
+	protocolFactory := thrift.NewTBinaryProtocolFactoryDefault()
+	var transport thrift.TTransport
+	var err error
+	transport, err = thrift.NewTSocket(addr)
+	if err != nil {
+		fmt.Println("Error opening socket:", err)
+		return nil, err
+	}
+	transport = transportFactory.GetTransport(transport)
+	if err := transport.Open(); err != nil {
+		return nil, err
+	}
+  richclient := &RichClient{ Client:deep_score_service.NewDeepScorerServiceClientFactory(transport, protocolFactory), Transport:transport}
+  return richclient, nil
 }
 
 func TestThriftClient(addr string) {

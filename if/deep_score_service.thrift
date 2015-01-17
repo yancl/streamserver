@@ -8,7 +8,9 @@ struct DataEntry {
 1: string key,
 2: binary val,
 3: i32 number,
-4: bool last = false
+4: bool last = false,
+5: string host,
+6: i32 port
 }
 
 service DeepScorerService {

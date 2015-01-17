@@ -1,7 +1,6 @@
 package main
 
 import (
-	"acceptor"
 	"config"
 	"fmt"
 	"io"
@@ -11,6 +10,8 @@ import (
 	"os"
 	"sync"
 	"time"
+	"deep_score_service"
+	"acceptor"
 )
 
 // 1MB, more data will write to disk file tempory
@@ -101,6 +102,22 @@ func SendNotify(key string, message string) bool {
 	return false
 }
 
+func sendMessage(client *deep_score_service.DeepScorerServiceClient, message *deep_score_service.DataEntry) error {
+  //compose messages
+	capacity := 1 
+	messages := make([]*deep_score_service.DataEntry, 0, capacity)
+  messages = append(messages, message)
+
+	//send messages
+	r, err := client.AddDataEntryStream(messages)
+	if err != nil {
+		fmt.Printf("add messages failed,err:%s \n", err)
+	} else {
+		fmt.Printf("add messages ok, r:%v\n", r)
+	}
+	return err
+}
+
 func UploadStream(w http.ResponseWriter, r *http.Request) {
 	mr, err := r.MultipartReader()
 	if err != nil {
@@ -116,6 +133,20 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	//length := r.ContentLength
 	//fmt.Printf("content length:%v \n", length)
 
+	key := "yancl"
+
+  addr := "localhost:1463"
+  rich_client, err := acceptor.NewDataStreamClient(addr)
+  if err != nil {
+    fmt.Printf("create thrift client failed!, err:%s\n", err)
+    return
+  }
+
+  //release connection
+  defer rich_client.Transport.Close()
+
+  var number int32
+  //send data
 	for {
 		part, err := mr.NextPart()
 		if err == io.EOF {
@@ -137,12 +168,14 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 			read = read + int64(size)
 			//fmt.Printf("read: %v \n",read )
 			wf.Write(buffer[0:size])
+      sendMessage(rich_client.Client, &deep_score_service.DataEntry{Key: key, Val: buffer[0:size], Number: number, Last: false})
+      number += 1
 		}
 	}
 
-	acceptor.TestThriftClient("localhost:1463")
+  //send last message
+  sendMessage(rich_client.Client, &deep_score_service.DataEntry{Key: key, Val: nil, Number: number, Last: true})
 
-	key := "key"
 	result := WaitForNotify(key)
 	fmt.Fprintf(w, "result is:%s \n", result)
 }
@@ -160,8 +193,6 @@ func NotifyStream(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	config.LoadConfig()
-
-	//acceptor.TestThriftClient("localhost:1463")
 
 	http.HandleFunc("/upload", UploadStream)
 	http.HandleFunc("/notify", NotifyStream)
