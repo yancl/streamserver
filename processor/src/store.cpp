@@ -3,16 +3,20 @@
 #include <iostream>
 
 Store::Store() {
-  _slices = new list<Slice>();
+  //_slices = new list<Slice>();
+  _fifo_map = new FIFOMap();
 }
 
 Store::~Store(){}
 
 void Store::addSlice(const Slice& slice) {
-  _slices->push_back(slice);
+  //_slices->push_back(slice);
+  _fifo_map->addSlice(slice);
 }
 
 Slice* Store::getSlice() {
+  return _fifo_map->nextSlice();
+  /*
   if (!_slices->empty()) {
     const Slice& t = _slices->front();
     Slice* slice = new Slice(t._key, t._val, t._number, t._flag, t._host, t._port);
@@ -21,6 +25,7 @@ Slice* Store::getSlice() {
     return slice;
   }
   return NULL;
+  */
   /*
   string key = "key";
   string val = "val";

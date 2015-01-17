@@ -4,6 +4,8 @@ all:
 	env_default.cpp \
 	compute_unit.cpp \
 	store.cpp \
+	fifo_map.cpp \
+	message.cpp \
 	gen-cpp/deep_score_service_constants.cpp \
 	gen-cpp/DeepScorerService.cpp \
 	gen-cpp/deep_score_service_types.cpp \

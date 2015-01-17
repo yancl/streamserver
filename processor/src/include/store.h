@@ -3,6 +3,7 @@
 
 #include <list>
 #include "slice.h"
+#include "fifo_map.h"
 
 
 class Store {
@@ -15,6 +16,7 @@ public:
   Slice* getSlice();
 
 private:
-  std::list<Slice>* _slices; 
+  //std::list<Slice>* _slices; 
+  FIFOMap* _fifo_map;
 };
 #endif
