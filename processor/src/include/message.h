@@ -1,10 +1,11 @@
-#ifndef SCRIBE_MESSAGE_H
-#define SCRIBE_MESSAGE_H
+#ifndef STREAM_SERVER_MESSAGE_H
+#define STREAM_SERVER_MESSAGE_H
 
 #include <list>
 #include "slice.h"
 
-extern Slice* g_SlicePtr;
+namespace deepscore {
+
 
 class Message {
 public:
@@ -37,4 +38,6 @@ private:
   pthread_mutex_t _next_slice_mutex;
   pthread_cond_t _next_slice_cond;
 };
+
+}
 #endif

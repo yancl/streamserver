@@ -2,13 +2,13 @@
 #include "curl/curl.h"
 #include <string>
 
-CHttpClient::CHttpClient(void) : 
+deepscore::CHttpClient::CHttpClient(void) : 
 m_bDebug(false)
 {
 
 }
 
-CHttpClient::~CHttpClient(void)
+deepscore::CHttpClient::~CHttpClient(void)
 {
 
 }
@@ -51,7 +51,7 @@ static size_t OnWriteData(void* buffer, size_t size, size_t nmemb, void* lpVoid)
   return nmemb;
 }
 
-int CHttpClient::Post(const std::string & strUrl, const std::string & strPost, std::string & strResponse)
+int deepscore::CHttpClient::Post(const std::string & strUrl, const std::string & strPost, std::string & strResponse)
 {
   CURLcode res;
   CURL* curl = curl_easy_init();
@@ -78,7 +78,7 @@ int CHttpClient::Post(const std::string & strUrl, const std::string & strPost, s
   return res;
 }
 
-int CHttpClient::Get(const std::string & strUrl, std::string & strResponse)
+int deepscore::CHttpClient::Get(const std::string & strUrl, std::string & strResponse)
 {
   CURLcode res;
   CURL* curl = curl_easy_init();
@@ -108,7 +108,7 @@ int CHttpClient::Get(const std::string & strUrl, std::string & strResponse)
   return res;
 }
 
-int CHttpClient::Posts(const std::string & strUrl, const std::string & strPost, std::string & strResponse, const char * pCaPath)
+int deepscore::CHttpClient::Posts(const std::string & strUrl, const std::string & strPost, std::string & strResponse, const char * pCaPath)
 {
   CURLcode res;
   CURL* curl = curl_easy_init();
@@ -147,7 +147,7 @@ int CHttpClient::Posts(const std::string & strUrl, const std::string & strPost, 
   return res;
 }
 
-int CHttpClient::Gets(const std::string & strUrl, std::string & strResponse, const char * pCaPath)
+int deepscore::CHttpClient::Gets(const std::string & strUrl, std::string & strResponse, const char * pCaPath)
 {
   CURLcode res;
   CURL* curl = curl_easy_init();
@@ -184,7 +184,7 @@ int CHttpClient::Gets(const std::string & strUrl, std::string & strResponse, con
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-void CHttpClient::SetDebug(bool bDebug)
+void deepscore::CHttpClient::SetDebug(bool bDebug)
 {
   m_bDebug = bDebug;
 }

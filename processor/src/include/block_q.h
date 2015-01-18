@@ -1,11 +1,14 @@
-#ifndef SCRIBE_BLOCK_Q_H
-#define SCRIBE_BLOCK_Q_H
+#ifndef STREAM_SERVER_BLOCK_Q_H
+#define STREAM_SERVER_BLOCK_Q_H
+#include <queue>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 
 //code change from here as a convinient
 //[https://www.justsoftwaresolutions.co.uk/threading/implementing-a-thread-safe-queue-using-condition-variables.html]
 //
+namespace deepscore {
+
 template<typename T>
 class BlockQueue {
 public:
@@ -49,4 +52,5 @@ private:
     boost::condition_variable _q_cond;
 };
 
+}
 #endif

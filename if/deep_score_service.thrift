@@ -1,3 +1,5 @@
+namespace go deepscore
+
 enum ResultCode {
   OK,
   TRY_LATER

@@ -2,16 +2,16 @@
 
 #include <iostream>
 
-Store::Store() {
+deepscore::Store::Store() {
   _fifo_map = new FIFOMap();
 }
 
-Store::~Store(){}
+deepscore::Store::~Store(){}
 
-void Store::addSlice(const Slice& slice) {
+void deepscore::Store::addSlice(const Slice& slice) {
   _fifo_map->addSlice(slice);
 }
 
-Slice* Store::getSlice() {
+deepscore::Slice* deepscore::Store::getSlice() {
   return _fifo_map->nextSlice();
 }

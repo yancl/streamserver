@@ -1,7 +1,9 @@
-#ifndef __HTTP_CURL_H__
-#define __HTTP_CURL_H__
+#ifndef STREAM_SERVER_CURL_H
+#define STREAM_SERVER_CURL_H
 
 #include <string>
+
+namespace deepscore {
 
 class CHttpClient
 {
@@ -53,4 +55,5 @@ private:
   bool m_bDebug;
 };
 
+}
 #endif

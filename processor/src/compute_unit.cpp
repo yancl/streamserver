@@ -2,24 +2,24 @@
 #include <sstream>
 #include "include/compute_unit.h"
 
-void* ComputeUnit::threadStatic(void *this_ptr) {
+void* deepscore::ComputeUnit::threadStatic(void *this_ptr) {
   ComputeUnit *compute_ptr = (ComputeUnit*)this_ptr;
   compute_ptr->run();
   return NULL;
 }
 
-ComputeUnit::ComputeUnit(BlockQueue<CallbackMsg>* callback_q):
+deepscore::ComputeUnit::ComputeUnit(BlockQueue<CallbackMsg>* callback_q):
   _callback_q(callback_q) {
   _store = new Store();
 }
 
-ComputeUnit::~ComputeUnit() {}
+deepscore::ComputeUnit::~ComputeUnit() {}
 
-void ComputeUnit::addSlice(const Slice& slice) {
+void deepscore::ComputeUnit::addSlice(const Slice& slice) {
   _store->addSlice(slice);
 }
 
-void ComputeUnit::run() {
+void deepscore::ComputeUnit::run() {
   LOG(INFO) << "[Enter] Compute Unit...";
   bool stop = false;
   while (!stop) {
@@ -30,7 +30,7 @@ void ComputeUnit::run() {
   LOG(INFO) << "[Exit] Compute Unit...";
 }
 
-void ComputeUnit::computeMessage() {
+void deepscore::ComputeUnit::computeMessage() {
     //state machine start!
     bool meet_message_begin = false;
     while(true) {
@@ -115,6 +115,6 @@ END:
 }
 
 
-void ComputeUnit::sendJsonResponse(const std::string& host, int port, const std::string& key, const std::string& message) {
+void deepscore::ComputeUnit::sendJsonResponse(const std::string& host, int port, const std::string& key, const std::string& message) {
   _callback_q->push(CallbackMsg(host, port, key, message));
 }

@@ -22,7 +22,7 @@
 // @author Anthony Giardullo
 
 #include "include/common.h"
-#include "include/deep_score_server.h"
+#include "include/stream_handler.h"
 
 using namespace apache::thrift;
 using namespace apache::thrift::protocol;
@@ -30,33 +30,16 @@ using namespace apache::thrift::transport;
 using namespace apache::thrift::server;
 using namespace apache::thrift::concurrency;
 
-using namespace scribe::concurrency;
+using namespace deepscore::concurrency;
 
 using boost::shared_ptr;
 
-/*
- * Network configuration and directory services
- */
-
-bool scribe::network_config::getService(const std::string& serviceName,
-                                        const std::string& options,
-                                        server_vector_t& _return) {
-  return false;
-}
-
-/*
- * Concurrency mechanisms
- */
-
-shared_ptr<ReadWriteMutex> scribe::concurrency::createReadWriteMutex() {
-  return shared_ptr<ReadWriteMutex>(new ReadWriteMutex());
-}
 
 /*
  * Time functions
  */
 
-unsigned long scribe::clock::nowInMsec() {
+unsigned long deepscore::clock::nowInMsec() {
   // There is a minor race condition between the 2 calls below,
   // but the chance is really small.
 
@@ -74,11 +57,11 @@ unsigned long scribe::clock::nowInMsec() {
  * Hash functions
  */
 
-uint32_t scribe::integerhash::hash32(uint32_t key) {
+uint32_t deepscore::integerhash::hash32(uint32_t key) {
   return key;
 }
 
-uint32_t scribe::strhash::hash32(const char *s) {
+uint32_t deepscore::strhash::hash32(const char *s) {
   // Use the djb2 hash (http://www.cse.yorku.ca/~oz/hash.html)
   if (s == NULL) {
     return 0;
@@ -92,21 +75,20 @@ uint32_t scribe::strhash::hash32(const char *s) {
 }
 
 /*
- * Starting a scribe server.
+ * Starting a deepscore server.
  */
-// note: this function uses global g_Handler.
-void scribe::startServer() {
-  boost::shared_ptr<TProcessor> processor(new DeepScorerServiceProcessor(g_Handler));
+void deepscore::startServer() {
+  boost::shared_ptr<TProcessor> processor(new DeepScorerServiceProcessor(deepscore::g_Handler));
   /* This factory is for binary compatibility. */
   boost::shared_ptr<TProtocolFactory> protocol_factory(
     new TBinaryProtocolFactory(0, 0, false, false)
   );
   boost::shared_ptr<ThreadManager> thread_manager;
 
-  if (g_Handler->numThriftServerThreads > 1) {
+  if (deepscore::g_Handler->numThriftServerThreads > 1) {
     // create a ThreadManager to process incoming calls
     thread_manager = ThreadManager::newSimpleThreadManager(
-      g_Handler->numThriftServerThreads
+      deepscore::g_Handler->numThriftServerThreads
     );
 
     shared_ptr<PosixThreadFactory> thread_factory(new PosixThreadFactory());
@@ -117,16 +99,16 @@ void scribe::startServer() {
   shared_ptr<TNonblockingServer> server(new TNonblockingServer(
                                           processor,
                                           protocol_factory,
-                                          g_Handler->port,
+                                          deepscore::g_Handler->port,
                                           thread_manager
                                         ));
-  g_Handler->setServer(server);
+  deepscore::g_Handler->setServer(server);
 
-  LOG_OPER("Starting stream server on port %lu", g_Handler->port);
+  LOG_OPER("Starting stream server on port %lu", deepscore::g_Handler->port);
   fflush(stderr);
 
   // throttle concurrent connections
-  unsigned long mconn = g_Handler->getMaxConn();
+  unsigned long mconn = deepscore::g_Handler->getMaxConn();
   if (mconn > 0) {
     LOG_OPER("Throttle max_conn to %lu", mconn);
     server->setMaxConnections(mconn);
@@ -139,8 +121,8 @@ void scribe::startServer() {
 
 
 /*
- * Stopping a scribe server.
+ * Stopping a deepscore server.
  */
-void scribe::stopServer() {
+void deepscore::stopServer() {
   exit(0);
 }

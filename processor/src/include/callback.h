@@ -1,8 +1,10 @@
-#ifndef SCRIBE_CALLBACK_H
-#define SCRIBE_CALLBACK_H
+#ifndef STREAM_SERVER_CALLBACK_H
+#define STREAM_SERVER_CALLBACK_H
 #include <string>
 #include "block_q.h"
 #include "callback_msg.h"
+
+namespace deepscore {
 
 class Callback {
 public:
@@ -22,4 +24,5 @@ private:
   BlockQueue<CallbackMsg>*  _message_q_ptr;
 };
 
+}
 #endif

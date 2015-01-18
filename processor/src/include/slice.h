@@ -1,8 +1,10 @@
-#ifndef SCRIBE_SLICE_H
-#define SCRIBE_SLICE_H
+#ifndef STREAM_SERVER_SLICE_H
+#define STREAM_SERVER_SLICE_H
 
 #include <string>
 #include "../gen-cpp/deep_score_service_types.h"
+
+namespace deepscore {
 
 struct Slice {
   std::string _key;
@@ -15,5 +17,9 @@ struct Slice {
   _key(key), _val(val), _number(number), _flag(flag), _host(host), _port(port) {
   }
 };
+
+extern Slice* g_SlicePtr;
+
+}
 
 #endif

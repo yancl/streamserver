@@ -17,8 +17,8 @@
 //
 // @author Bobby Johnson
 
-#ifndef SCRIBE_ENV
-#define SCRIBE_ENV
+#ifndef STREAM_SERVER_ENV_H
+#define STREAM_SERVER_ENV_H
 
 #include "thrift/protocol/TBinaryProtocol.h"
 #include "thrift/server/TNonblockingServer.h"
@@ -34,26 +34,6 @@
 #include "thrift/transport/TBufferTransports.h"
 #include "thrift/transport/TSimpleFileTransport.h"
 
-//#include "fb303/FacebookBase.h"
-
-//#include "src/gen-cpp/scribe.h"
-//#include "src/gen-cpp/BucketStoreMapping.h"
-
-//typedef boost::shared_ptr<scribe::thrift::LogEntry> logentry_ptr_t;
-//typedef std::vector<logentry_ptr_t> logentry_vector_t;
-typedef std::vector<std::pair<std::string, int> > server_vector_t;
-
-// scribe version
-const std::string scribeversion("2.2");
-#define DEFAULT_CONF_FILE_LOCATION "/usr/local/scribe/scribe.conf"
-
-/*
- * This file contains methods for handling tasks that depend
- * on the environment in which this process is running.
- * i.e. using scribe will not force the adoption of a particular
- * system for monitoring or configuring services over the network.
- */
-
 /*
  * Debug logging
  */
@@ -68,20 +48,7 @@ const std::string scribeversion("2.2");
   }
 
 
-namespace scribe {
-
-/*
- * Network based configuration and directory service
- */
-
-namespace network_config {
-  // gets a vector of machine/port pairs for a named service
-  // returns true on success
-  bool getService(const std::string& serviceName,
-                         const std::string& options,
-                         server_vector_t& _return);
-
-} // !namespace scribe::network_config
+namespace deepscore {
 
 /*
  * Concurrency mechanisms
@@ -94,7 +61,7 @@ namespace concurrency {
   // you can choose different implementations based on your needs.
   boost::shared_ptr<ReadWriteMutex> createReadWriteMutex();
 
-} // !namespace scribe::concurrency
+} // !namespace deepscore::concurrency
 
 /*
  * Time functions
@@ -103,7 +70,7 @@ namespace concurrency {
 namespace clock {
   unsigned long nowInMsec();
 
-} // !namespace scribe::clock
+} // !namespace deepscore::clock
 
 /*
  * Hash functions
@@ -121,15 +88,15 @@ class strhash {
 };
 
 /*
- * Starting a scribe server.
+ * Starting a stream server.
  */
 void startServer();
 
 /*
- * Stopping a scribe server.
+ * Stopping a stream server.
  */
 void stopServer();
 
-} // !namespace scribe
+} // !namespace deepscore
 
-#endif // SCRIBE_ENV
+#endif // STREAM_SERVER_ENV

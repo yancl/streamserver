@@ -18,8 +18,8 @@
 // @author Bobby Johnson
 // @author Jason Sobel
 
-#ifndef SCRIBE_COMMON_H
-#define SCRIBE_COMMON_H
+#ifndef STREAM_SERVER_COMMON_H
+#define STREAM_SERVER_COMMON_H
 
 #include <sstream>
 #include <iostream>
@@ -47,16 +47,6 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <glog/logging.h>
-
-
-// For security reasons we can't release everything that's compiled
-// in at facebook. Other users might find this useful as well for
-// integrating to their environment.
-// Things in this file include network based configuration and debug messages
-#ifdef FACEBOOK
-#include "env_facebook.h"
-#else
 #include "env_default.h"
-#endif
 
-#endif // !defined SCRIBE_COMMON_H
+#endif // !defined STREAM_SERVER_COMMON_H

@@ -21,11 +21,13 @@
 // @author Avinash Lakshman
 // @author Anthony Giardullo
 
-#ifndef SCRIBE_SERVER_H
-#define SCRIBE_SERVER_H
+#ifndef STREAM_SERVER_SERVER_H
+#define STREAM_SERVER_SERVER_H
 
 #include "compute_unit.h"
 #include "../gen-cpp/DeepScorerService.h"
+
+namespace deepscore {
 
 const int TOTAL_COMPUTE_THREAD_NUM = 16;
 
@@ -68,13 +70,6 @@ class StreamHandler : virtual public DeepScorerServiceIf {
   unsigned long maxConn;
   unsigned long long maxQueueSize;
 
-  /* mutex to syncronize access to StreamHandler.
-   * A single mutex is fine since it only needs to be locked in write mode
-   * during start/stop/reinitialize or when we need to create a new category.
-   */
-  boost::shared_ptr<apache::thrift::concurrency::ReadWriteMutex>
-    StreamHandlerLock;
-
   // disallow empty construction, copy, and assignment
   StreamHandler();
   StreamHandler(const StreamHandler& rhs);
@@ -87,4 +82,6 @@ private:
   BlockQueue<CallbackMsg>* _callback_q_ptr;
 };
 extern boost::shared_ptr<StreamHandler> g_Handler;
-#endif // SCRIBE_SERVER_H
+
+}
+#endif // STREAM_SERVER_SERVER_H

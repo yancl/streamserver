@@ -1,6 +1,8 @@
-#ifndef SCRIBE_CALLBACK_MESSAGE_H
-#define SCRIBE_CALLBACK_MESSAGE_H
+#ifndef STREAM_SERVER_CALLBACK_MESSAGE_H
+#define STREAM_SERVER_CALLBACK_MESSAGE_H
 #include <string>
+
+namespace deepscore {
 
 struct CallbackMsg {
   CallbackMsg(){}
@@ -25,5 +27,7 @@ struct CallbackMsg {
   std::string _key;
   std::string _msg;
 };
+
+}
 
 #endif

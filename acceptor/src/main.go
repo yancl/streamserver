@@ -1,7 +1,9 @@
 package main
 
 import (
+	"acceptor"
 	"config"
+	"deep_score_service"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,8 +12,6 @@ import (
 	"os"
 	"sync"
 	"time"
-	"deep_score_service"
-	"acceptor"
 )
 
 // 1MB, more data will write to disk file tempory
@@ -41,7 +41,6 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 const CHUNK_SIZE = 4 * 1024
 
 var KEY_CHANNEL_MAPPER = make(map[string]chan string)
-
 var KEY_CHANNEL_MUTEX = &sync.Mutex{}
 
 func AddKeyChanToMap(key string, receiver chan string) bool {
@@ -103,10 +102,10 @@ func SendNotify(key string, message string) bool {
 }
 
 func sendMessage(client *deep_score_service.DeepScorerServiceClient, message *deep_score_service.DataSlice) error {
-  //compose messages
-	capacity := 1 
+	//compose messages
+	capacity := 1
 	messages := make([]*deep_score_service.DataSlice, 0, capacity)
-  messages = append(messages, message)
+	messages = append(messages, message)
 
 	//send messages
 	r, err := client.AddDataSliceStream(messages)
@@ -136,24 +135,24 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
 	key := "yancl"
 
-  host := "127.0.0.1"
-  var port int32
-  port = 8081
+	host := "127.0.0.1"
+	var port int32
+	port = 8081
 
-  addr := "localhost:1463"
-  rich_client, err := acceptor.NewDataStreamClient(addr)
-  if err != nil {
-    fmt.Printf("create thrift client failed!, err:%s\n", err)
-    return
-  }
+	addr := "localhost:1463"
+	rich_client, err := acceptor.NewDataStreamClient(addr)
+	if err != nil {
+		fmt.Printf("create thrift client failed!, err:%s\n", err)
+		return
+	}
 
-  //release connection
-  defer rich_client.Transport.Close()
+	//release connection
+	defer rich_client.Transport.Close()
 
-  var number int32
-  var slice_flag deep_score_service.SliceFlag = deep_score_service.SliceFlag_START
+	var number int32
+	var slice_flag deep_score_service.SliceFlag = deep_score_service.SliceFlag_START
 
-  //send data
+	//send data
 	for {
 		part, err := mr.NextPart()
 		if err == io.EOF {
@@ -175,24 +174,25 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 			read = read + int64(size)
 			//fmt.Printf("read: %v \n",read )
 			wf.Write(buffer[0:size])
-      sendMessage(rich_client.Client, &deep_score_service.DataSlice{Key: key, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: host, Port: port})
-      slice_flag = deep_score_service.SliceFlag_MIDDLE
-      number += 1
+			sendMessage(rich_client.Client, &deep_score_service.DataSlice{Key: key, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: host, Port: port})
+			slice_flag = deep_score_service.SliceFlag_MIDDLE
+			number += 1
 		}
 	}
 
-  //time.Sleep(time.Second * 10)
+	//time.Sleep(time.Second * 10)
 
-  //send last message
-  slice_flag = deep_score_service.SliceFlag_FINISH
-  sendMessage(rich_client.Client, &deep_score_service.DataSlice{Key: key, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
+	//send last message
+	slice_flag = deep_score_service.SliceFlag_FINISH
+	sendMessage(rich_client.Client, &deep_score_service.DataSlice{Key: key, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
+	fmt.Println("send last message done!")
 
 	result := WaitForNotify(key)
 	fmt.Fprintf(w, "result is:%s \n", result)
 }
 
 func NotifyStream(w http.ResponseWriter, r *http.Request) {
-  fmt.Println("receive message!")
+	fmt.Println("receive message!")
 	key := "yancl"
 	message := "OK!"
 	result := SendNotify(key, message)
@@ -204,11 +204,11 @@ func NotifyStream(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-  log.Printf("begin to run!\n");
+	log.Printf("begin to run!\n")
 	config.LoadConfig()
 
 	http.HandleFunc("/upload", UploadStream)
 	http.HandleFunc("/notify", NotifyStream)
-  fmt.Printf("start acceptor at 127.0.0.1:8081!\n")
+	fmt.Printf("start acceptor at 127.0.0.1:8081!\n")
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }

@@ -1,6 +1,7 @@
 all:
 	g++ -o ../bin/deep_score_server \
 	deep_score_server.cpp \
+	stream_handler.cpp \
 	env_default.cpp \
 	compute_unit.cpp \
 	store.cpp \

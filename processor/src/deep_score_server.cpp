@@ -1,59 +1,27 @@
-//  Copyright (c) 2007-2008 Facebook
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-// See accompanying file LICENSE or visit the Scribe site at:
-// http://developers.facebook.com/scribe/
-//
-// @author Bobby Johnson
-// @author James Wang
-// @author Jason Sobel
-// @author Avinash Lakshman
-// @author Anthony Giardullo
-
 #include "include/common.h"
 #include "include/callback.h"
 #include "include/compute_unit.h"
-#include "include/deep_score_server.h"
-
-using namespace apache::thrift::concurrency;
-
-using namespace std;
+#include "include/stream_handler.h"
 
 using boost::shared_ptr;
+using namespace deepscore;
 
-shared_ptr<StreamHandler> g_Handler;
-Slice* g_SlicePtr;
-
-#define DEFAULT_CHECK_PERIOD       5
-#define DEFAULT_MAX_MSG_PER_SECOND 0
-#define DEFAULT_MAX_QUEUE_SIZE     5000000LL
-#define DEFAULT_SERVER_THREADS     3
-#define DEFAULT_MAX_CONN           0
-
+shared_ptr<StreamHandler> deepscore::g_Handler;
+deepscore::Slice* deepscore::g_SlicePtr;
 
 void print_usage(const char* program_name) {
-  cout << "Usage: " << program_name << " [-p port] [-c config_file]" << endl;
+  std::cout << "Usage: " << program_name << " [-p port] [-c config_file]" << std::endl;
 }
 
 int main(int argc, char **argv) {
 
   try {
     /* Increase number of fds */
+    /*
     struct rlimit r_fd = {65535,65535};
     if (-1 == setrlimit(RLIMIT_NOFILE, &r_fd)) {
-      LOG_OPER("setrlimit error (setting max fd size)");
-    }
+      LOG(ERROR) << "setrlimit error (setting max fd size)";
+    }*/
 
     int next_option;
     const char* const short_options = "hp:c:";
@@ -92,67 +60,19 @@ int main(int argc, char **argv) {
     //init logger
     google::InitGoogleLogging(argv[0]);
     
+    deepscore::g_SlicePtr = new Slice("X","X",-1,SliceFlag::BROKEN,"X",-1);
 
-    g_SlicePtr = new Slice("X","X",-1,SliceFlag::BROKEN,"X",-1);
+    deepscore::g_Handler = shared_ptr<StreamHandler>(new StreamHandler(port, config_file));
+    deepscore::g_Handler->initialize();
 
-    g_Handler = shared_ptr<StreamHandler>(new StreamHandler(port, config_file));
-    g_Handler->initialize();
+    deepscore::startServer(); // never returns
 
-    scribe::startServer(); // never returns
-
-    delete g_SlicePtr;
+    delete deepscore::g_SlicePtr;
 
   } catch(const std::exception& e) {
-    LOG_OPER("Exception in main: %s", e.what());
+    LOG(FATAL) << "exception in main:" << e.what();
   }
 
-  LOG_OPER("scribe server exiting");
+  LOG(FATAL) << "stream server exiting";
   return 0;
-}
-
-StreamHandler::StreamHandler(unsigned long int server_port, const std::string& config_file)
-  : port(server_port),
-    numThriftServerThreads(DEFAULT_SERVER_THREADS),
-    checkPeriod(DEFAULT_CHECK_PERIOD),
-    configFilename(config_file),
-    numMsgLastSecond(0),
-    maxMsgPerSecond(DEFAULT_MAX_MSG_PER_SECOND),
-    maxConn(DEFAULT_MAX_CONN),
-    maxQueueSize(DEFAULT_MAX_QUEUE_SIZE) {
-  time(&lastMsgTime);
-  StreamHandlerLock = scribe::concurrency::createReadWriteMutex();
-  _callback_q_ptr = NULL;
-}
-
-StreamHandler::~StreamHandler() {
-  if(_callback_q_ptr != NULL) {
-    delete _callback_q_ptr;
-  }
-}
-
-void StreamHandler::initialize() {
-  //create callback queue
-  _callback_q_ptr = new BlockQueue<CallbackMsg>();
-
-  //init callback worker
-  Callback* callback = new Callback(_callback_q_ptr);
-  pthread_create(&(_callback_handler), NULL, Callback::threadStatic, (void*) callback);
-  
-  //init compute worker
-  for (int i = 0; i < TOTAL_COMPUTE_THREAD_NUM; i++) {
-    ComputeUnit* compute_unit = new ComputeUnit(_callback_q_ptr);
-    this->_compute_units[i] = compute_unit;
-    pthread_create(&(this->_thread_handlers[i]), NULL, ComputeUnit::threadStatic, (void*) compute_unit);
-  }
-}
-
-ResultCode::type StreamHandler::AddDataSliceStream(const std::vector<DataSlice, std::allocator<DataSlice> >& slices) {
-  std::vector<DataSlice>::const_iterator citr = slices.begin();
-  for (;citr != slices.end(); citr++) {
-    uint32_t num = scribe::strhash::hash32(citr->key.c_str());
-    Slice slice(citr->key, citr->val, citr->number, citr->flag, citr->host, citr->port);
-    (_compute_units[num % TOTAL_COMPUTE_THREAD_NUM])->addSlice(slice);
-  }
-  cout << "add data entry" << endl;
-  return ResultCode::OK;
 }

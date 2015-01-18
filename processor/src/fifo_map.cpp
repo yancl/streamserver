@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-FIFOMap::FIFOMap(unsigned map_size):_inited(false),_wait_for_next_message(true),_map_size(map_size){
+deepscore::FIFOMap::FIFOMap(unsigned map_size):_inited(false),_wait_for_next_message(true),_map_size(map_size){
   if (!_inited) {
     pthread_mutex_init(&_fifo_mutex, NULL);
     pthread_mutex_init(&_next_message_mutex, NULL);
@@ -14,7 +14,7 @@ FIFOMap::FIFOMap(unsigned map_size):_inited(false),_wait_for_next_message(true),
   }
 }
 
-FIFOMap::~FIFOMap() {
+deepscore::FIFOMap::~FIFOMap() {
   if (_inited) {
     pthread_mutex_destroy(&_fifo_mutex);
     pthread_mutex_destroy(&_next_message_mutex);
@@ -23,7 +23,7 @@ FIFOMap::~FIFOMap() {
   }
 }
 
-void FIFOMap::addSlice(const Slice& slice) {
+void deepscore::FIFOMap::addSlice(const Slice& slice) {
   pthread_mutex_lock(&_fifo_mutex); 
 
   std::list<Message*>::iterator message_iter = _messages.end();
@@ -47,7 +47,7 @@ void FIFOMap::addSlice(const Slice& slice) {
   pthread_mutex_unlock(&_fifo_mutex);
 }
 
-Slice* FIFOMap::nextSlice() {
+deepscore::Slice* deepscore::FIFOMap::nextSlice() {
   while (true) {
     //get current message iterator
     pthread_mutex_lock(&_fifo_mutex);
@@ -82,21 +82,21 @@ Slice* FIFOMap::nextSlice() {
   }
 }
 
-std::list<Message*>* FIFOMap::getConsumedMessages(int count) {
+std::list<deepscore::Message*>* deepscore::FIFOMap::getConsumedMessages(int count) {
   pthread_mutex_lock(&_fifo_mutex); 
   pthread_mutex_unlock(&_fifo_mutex);
   return NULL;
 }
 
-std::list<Message*>::iterator FIFOMap::nextIter(std::list<Message*>::iterator itr) {
-  std::list<Message*>::iterator itr_copied = itr;
+std::list<deepscore::Message*>::iterator deepscore::FIFOMap::nextIter(std::list<deepscore::Message*>::iterator itr) {
+  std::list<deepscore::Message*>::iterator itr_copied = itr;
   if (itr == _messages.end()) {
     return itr;
   }
   return ++itr_copied;
 }
 
-void FIFOMap::waitForNewMessage() {
+void deepscore::FIFOMap::waitForNewMessage() {
   //cout << "begin to cond for new messages.." <<endl;
   struct timeval now;
   struct timespec abs_timeout;
@@ -112,7 +112,7 @@ void FIFOMap::waitForNewMessage() {
   //cout << "cond for new messages finished!" <<endl;
 }
 
-void FIFOMap::notifyNewMessage() {
+void deepscore::FIFOMap::notifyNewMessage() {
   pthread_mutex_lock(&_next_message_mutex);
   if (_wait_for_next_message) {
     _wait_for_next_message = false;

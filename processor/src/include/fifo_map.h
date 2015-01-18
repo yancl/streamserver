@@ -1,5 +1,5 @@
-#ifndef SCRIBE_FIFO_MAP_H
-#define SCRIBE_FIFO_MAP_H
+#ifndef STREAM_SERVER_FIFO_MAP_H
+#define STREAM_SERVER_FIFO_MAP_H
 
 #include <list>
 #include <tr1/unordered_map>
@@ -10,6 +10,8 @@
 #include "slice.h"
 #include "message.h"
 #include "../gen-cpp/deep_score_service_types.h"
+
+namespace deepscore {
 
 class FIFOMap {
 public:
@@ -50,5 +52,7 @@ private:
   pthread_cond_t _next_message_cond;
 
 };
+
+}
 
 #endif

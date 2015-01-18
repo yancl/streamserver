@@ -3,18 +3,18 @@
 #include "include/message.h"
 using namespace std;
 
-Message::Message():_next_slice_seq(0), _wait_for_next_slice(true), _broken(false){
+deepscore::Message::Message():_next_slice_seq(0), _wait_for_next_slice(true), _broken(false){
   pthread_mutex_init(&_next_slice_mutex, NULL);
   pthread_cond_init(&_next_slice_cond, NULL);
   _prev_slice_iter = _next_slice_iter = _slices.end();
 }
 
-Message::~Message(){
+deepscore::Message::~Message(){
   pthread_mutex_destroy(&_next_slice_mutex);
   pthread_cond_destroy(&_next_slice_cond);
 }
 
-void Message::addSlice(const Slice& slice) {
+void deepscore::Message::addSlice(const Slice& slice) {
   pthread_mutex_lock(&_next_slice_mutex);
   _slices.push_back(new Slice(slice._key, slice._val, slice._number, slice._flag, slice._host, slice._port));
 
@@ -22,7 +22,7 @@ void Message::addSlice(const Slice& slice) {
   pthread_mutex_unlock(&_next_slice_mutex);
 }
 
-Slice* Message::nextSlice() {
+deepscore::Slice* deepscore::Message::nextSlice() {
   while (true) {
     bool need_wait = false;
     pthread_mutex_lock(&_next_slice_mutex);
@@ -59,7 +59,7 @@ Slice* Message::nextSlice() {
   }
 }
 
-void Message::waitForNextSliceInLock() {
+void deepscore::Message::waitForNextSliceInLock() {
   cout << "begin to cond for next slice ..." << endl;
   struct timeval now;
   struct timespec abs_timeout;
@@ -74,17 +74,17 @@ void Message::waitForNextSliceInLock() {
 }
 
 
-void Message::notifyNextSliceInLock() {
+void deepscore::Message::notifyNextSliceInLock() {
   if (_wait_for_next_slice) {
     _wait_for_next_slice = false;
     pthread_cond_signal(&_next_slice_cond);
   }
 }
 
-std::list<Slice*>::iterator Message::nextSliceIter(std::list<Slice*>::iterator itr) {
+std::list<deepscore::Slice*>::iterator deepscore::Message::nextSliceIter(std::list<deepscore::Slice*>::iterator itr) {
   if (itr == _slices.end()) {
     return itr;
   }
-  std::list<Slice*>::iterator copied_iter = itr;
+  std::list<deepscore::Slice*>::iterator copied_iter = itr;
   return ++copied_iter;
 }

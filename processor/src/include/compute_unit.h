@@ -1,10 +1,11 @@
-#ifndef SCRIBE_COMPUTE_UNIT_H
-#define SCRIBE_COMPUTE_UNIT_H
+#ifndef STREAM_SERVER_COMPUTE_UNIT_H
+#define STREAM_SERVER_COMPUTE_UNIT_H
 
 #include "store.h"
 #include "callback_msg.h"
 #include "block_q.h"
 
+namespace deepscore {
 
 class ComputeUnit {
 public:
@@ -28,5 +29,6 @@ private:
   BlockQueue<CallbackMsg>* _callback_q;
 };
 
+}
 
 #endif
