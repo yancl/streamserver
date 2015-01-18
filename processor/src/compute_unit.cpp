@@ -1,15 +1,15 @@
-#include "include/compute_unit.h"
-#include "include/http_client.h"
 #include <pthread.h>
 #include <sstream>
+#include "include/compute_unit.h"
 
-void* threadStatic(void *this_ptr) {
+void* ComputeUnit::threadStatic(void *this_ptr) {
   ComputeUnit *compute_ptr = (ComputeUnit*)this_ptr;
-  compute_ptr->threadMember();
+  compute_ptr->run();
   return NULL;
 }
 
-ComputeUnit::ComputeUnit() {
+ComputeUnit::ComputeUnit(BlockQueue<CallbackMsg>* callback_q):
+  _callback_q(callback_q) {
   _store = new Store();
 }
 
@@ -19,99 +19,93 @@ void ComputeUnit::addSlice(const Slice& slice) {
   _store->addSlice(slice);
 }
 
-void ComputeUnit::threadMember() {
-  this->compute();
-}
-
-
-void ComputeUnit::compute() {
-  cout<< "enter compute unit..." << endl;
+void ComputeUnit::run() {
+  LOG(INFO) << "[Enter] Compute Unit...";
   bool stop = false;
   while (!stop) {
+    //slice constructs the message
     //one message contains (BEING,{MIDDLE,...},END) slices
-    //slice compose the message stream
     this->computeMessage();
   }
-  cout<< "exit compute unit..." << endl;
+  LOG(INFO) << "[Exit] Compute Unit...";
 }
 
 void ComputeUnit::computeMessage() {
     //state machine start!
     bool meet_message_begin = false;
     while(true) {
-      sleep(1);
       bool failed = false;
-      string err = "";
+      std::string err;
+      std::string warning;
       Slice* slice = _store->getSlice();
       if (slice == NULL) {
-        cerr << "found one NULL slice!" << endl;
+        LOG(FATAL) << "**NULL** slice happend!";
         return;
       }
 
       if(slice->_flag == SliceFlag::START) {
-        //compute process start
-        cout << pthread_self() <<"process message header part!" << endl;
+        //LOG(DEBUG) << "start to process message for key:" << slice._key;
+        LOG(INFO) << "start to process message for key:" << slice->_key;
 
         //duplicated message?
         if (meet_message_begin) {
-          err = "duplicated message header.";
+          err = "duplicated message header for key:" + slice->_key;
           failed = true;
           goto END;
         }
         meet_message_begin = true;
 
-        //core code begin
+        //compute code
 
-        //core code end
       } else if (slice->_flag == SliceFlag::MIDDLE) {
         if (!meet_message_begin) {
-          err = "unorder message happend!";
+          err = "[MIDDLE]unorder message happend for key:" + slice->_key;
           failed = true;
           goto END;
         }
-        cout << "process message middle part!" << endl;
 
-        //core code begin
+        //compute code
 
-        //core code end
       } else if (slice->_flag == SliceFlag::FINISH) {
         if (!meet_message_begin) {
-          err = "unorder message happend!";
+          err = "[END]unorder message happend for key:" + slice->_key;
           failed = true;
           goto END;
         }
 
-        //last slice of the message
-        cout << "process message end part!" << endl;
-        //core code begin
+        //compute code
 
-        //core code end
+        //LOG(DEBUG) << "finish to process message for key:" << slice._key;
+        LOG(INFO) << "finish to process message for key:" << slice->_key;
 
-        //compute over
-        ostringstream oss;
-        oss << "http://" << slice->_host << ":" << slice->_port << "/notify";
-        //string url = "http://%s:%d/notify/";
-        string url = oss.str();
-        string msg = "OK";
-        sendResponse(url, msg);
+
+        std::string message = "OK!";
+        sendJsonResponse(slice->_host, slice->_port, slice->_key, message);
         ////delete slice;
         return;
       } else if (slice->_flag == SliceFlag::BROKEN) {
         //part of the message will not show,maybe sender restart or send timeout,etc
         //what we will do is to drop the compute?
         //
-        err = "broken message show.";
+        warning = "broken message show for key:" + slice->_key;
         failed = true;
         goto END;
       } else {
-        err = "meet unexpected message flag!";
+        std::ostringstream oss;
+        oss << "meet unexpected message flag for key:" << slice->_key << " flag:" << slice->_flag;
+        err = oss.str();
         failed = true;
         goto END;
       }
 
 END:
     if (failed) {
-      cerr << err << endl;
+      if (!err.empty()) {
+        LOG(ERROR) << err;
+      }
+      if (!warning.empty()) {
+        LOG(WARNING) << warning;
+      }
       ////delete slice;
       return;
     }
@@ -121,13 +115,6 @@ END:
 }
 
 
-void ComputeUnit::sendResponse(const string& url, const string& message) {
-  CHttpClient http_client;
-  string rsp;
-  int rv = http_client.Get(url, rsp); 
-  if (rv != 0) {
-    cerr << "send rsp failed, rv:" << rv << " url:" << url << endl;
-    return;
-  }
-  cout << "send rsp ok for url:" << url << endl;
+void ComputeUnit::sendJsonResponse(const std::string& host, int port, const std::string& key, const std::string& message) {
+  _callback_q->push(CallbackMsg(host, port, key, message));
 }

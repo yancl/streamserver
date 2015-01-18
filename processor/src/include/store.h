@@ -2,9 +2,9 @@
 #define SCRIBE_STORE_H
 
 #include <list>
+#include "common.h"
 #include "slice.h"
 #include "fifo_map.h"
-
 
 class Store {
 public:
@@ -16,7 +16,6 @@ public:
   Slice* getSlice();
 
 private:
-  //std::list<Slice>* _slices; 
   FIFOMap* _fifo_map;
 };
 #endif

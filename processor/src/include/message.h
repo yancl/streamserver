@@ -2,7 +2,6 @@
 #define SCRIBE_MESSAGE_H
 
 #include <list>
-#include <sys/time.h>
 #include "slice.h"
 
 extern Slice* g_SlicePtr;

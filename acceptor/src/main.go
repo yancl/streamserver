@@ -204,6 +204,7 @@ func NotifyStream(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+  log.Printf("begin to run!\n");
 	config.LoadConfig()
 
 	http.HandleFunc("/upload", UploadStream)

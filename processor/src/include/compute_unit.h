@@ -2,29 +2,30 @@
 #define SCRIBE_COMPUTE_UNIT_H
 
 #include "store.h"
+#include "callback_msg.h"
+#include "block_q.h"
 
-#include <iostream>
-using namespace std;
-
-void* threadStatic(void *this_ptr);
 
 class ComputeUnit {
 public:
-  ComputeUnit();
+  ComputeUnit(BlockQueue<CallbackMsg>* callback_q);
   virtual ~ComputeUnit();
   void addSlice(const Slice& slice);
-  void threadMember();
+
+public:
+  static void* threadStatic(void *this_ptr);
 
 private:
-  void compute();
+  void run();
   //one message contains serveral slices
   void computeMessage();
 
   //send response to caller
-  void sendResponse(const string& url, const string& message);
+  void sendJsonResponse(const std::string& host, int port, const std::string& key, const std::string& json);
 
 private:
   Store* _store;
+  BlockQueue<CallbackMsg>* _callback_q;
 };
 
 

@@ -1,5 +1,6 @@
-#include "include/message.h"
 #include <iostream>
+#include <sys/time.h>
+#include "include/message.h"
 using namespace std;
 
 Message::Message():_next_slice_seq(0), _wait_for_next_slice(true), _broken(false){

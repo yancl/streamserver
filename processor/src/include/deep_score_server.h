@@ -81,8 +81,10 @@ class StreamHandler : virtual public DeepScorerServiceIf {
   const StreamHandler& operator=(const StreamHandler& rhs);
 
 private:
+  pthread_t _callback_handler;
   pthread_t _thread_handlers[TOTAL_COMPUTE_THREAD_NUM];
   ComputeUnit* _compute_units[TOTAL_COMPUTE_THREAD_NUM];
+  BlockQueue<CallbackMsg>* _callback_q_ptr;
 };
 extern boost::shared_ptr<StreamHandler> g_Handler;
 #endif // SCRIBE_SERVER_H

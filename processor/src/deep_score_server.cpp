@@ -21,8 +21,8 @@
 // @author Avinash Lakshman
 // @author Anthony Giardullo
 
-#include <glog/logging.h>
 #include "include/common.h"
+#include "include/callback.h"
 #include "include/compute_unit.h"
 #include "include/deep_score_server.h"
 
@@ -121,16 +121,28 @@ StreamHandler::StreamHandler(unsigned long int server_port, const std::string& c
     maxQueueSize(DEFAULT_MAX_QUEUE_SIZE) {
   time(&lastMsgTime);
   StreamHandlerLock = scribe::concurrency::createReadWriteMutex();
+  _callback_q_ptr = NULL;
 }
 
 StreamHandler::~StreamHandler() {
+  if(_callback_q_ptr != NULL) {
+    delete _callback_q_ptr;
+  }
 }
 
 void StreamHandler::initialize() {
+  //create callback queue
+  _callback_q_ptr = new BlockQueue<CallbackMsg>();
+
+  //init callback worker
+  Callback* callback = new Callback(_callback_q_ptr);
+  pthread_create(&(_callback_handler), NULL, Callback::threadStatic, (void*) callback);
+  
+  //init compute worker
   for (int i = 0; i < TOTAL_COMPUTE_THREAD_NUM; i++) {
-    ComputeUnit* compute_unit = new ComputeUnit();
+    ComputeUnit* compute_unit = new ComputeUnit(_callback_q_ptr);
     this->_compute_units[i] = compute_unit;
-    pthread_create(&(this->_thread_handlers[i]), NULL, threadStatic, (void*) compute_unit);
+    pthread_create(&(this->_thread_handlers[i]), NULL, ComputeUnit::threadStatic, (void*) compute_unit);
   }
 }
 
