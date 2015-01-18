@@ -17,7 +17,7 @@ import (
 // 1MB, more data will write to disk file tempory
 const MAX_MEMORY = 1 * 1024 * 1024
 
-func Upload(w http.ResponseWriter, r *http.Request) {
+func UploadAll(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(MAX_MEMORY); err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusForbidden)
@@ -206,6 +206,7 @@ func main() {
 	log.Printf("begin to run!\n")
 	config.LoadConfig()
 
+	http.HandleFunc("/upload_all", UploadAll)
 	http.HandleFunc("/upload", UploadStream)
 	http.HandleFunc("/notify", NotifyStream)
 	fmt.Printf("start acceptor at 127.0.0.1:8081!\n")
