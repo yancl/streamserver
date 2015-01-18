@@ -3,7 +3,7 @@ package main
 import (
 	"acceptor"
 	"config"
-	"deep_score_service"
+	"deepscore"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -101,10 +101,10 @@ func SendNotify(key string, message string) bool {
 	return false
 }
 
-func sendMessage(client *deep_score_service.DeepScorerServiceClient, message *deep_score_service.DataSlice) error {
+func sendMessage(client *deepscore.DeepScorerServiceClient, message *deepscore.DataSlice) error {
 	//compose messages
 	capacity := 1
-	messages := make([]*deep_score_service.DataSlice, 0, capacity)
+	messages := make([]*deepscore.DataSlice, 0, capacity)
 	messages = append(messages, message)
 
 	//send messages
@@ -150,7 +150,7 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	defer rich_client.Transport.Close()
 
 	var number int32
-	var slice_flag deep_score_service.SliceFlag = deep_score_service.SliceFlag_START
+	var slice_flag deepscore.SliceFlag = deepscore.SliceFlag_START
 
 	//send data
 	for {
@@ -174,8 +174,8 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 			read = read + int64(size)
 			//fmt.Printf("read: %v \n",read )
 			wf.Write(buffer[0:size])
-			sendMessage(rich_client.Client, &deep_score_service.DataSlice{Key: key, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: host, Port: port})
-			slice_flag = deep_score_service.SliceFlag_MIDDLE
+			sendMessage(rich_client.Client, &deepscore.DataSlice{Key: key, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: host, Port: port})
+			slice_flag = deepscore.SliceFlag_MIDDLE
 			number += 1
 		}
 	}
@@ -183,8 +183,8 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	//time.Sleep(time.Second * 10)
 
 	//send last message
-	slice_flag = deep_score_service.SliceFlag_FINISH
-	sendMessage(rich_client.Client, &deep_score_service.DataSlice{Key: key, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
+	slice_flag = deepscore.SliceFlag_FINISH
+	sendMessage(rich_client.Client, &deepscore.DataSlice{Key: key, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
 	fmt.Println("send last message done!")
 
 	result := WaitForNotify(key)

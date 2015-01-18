@@ -65,7 +65,7 @@ void deepscore::StreamHandler::initialize() {
   }
 }
 
-ResultCode::type deepscore::StreamHandler::AddDataSliceStream(const std::vector<DataSlice, std::allocator<DataSlice> >& slices) {
+deepscore::ResultCode::type deepscore::StreamHandler::AddDataSliceStream(const std::vector<DataSlice, std::allocator<DataSlice> >& slices) {
   std::vector<DataSlice>::const_iterator citr = slices.begin();
   for (;citr != slices.end(); citr++) {
     uint32_t num = deepscore::strhash::hash32(citr->key.c_str());

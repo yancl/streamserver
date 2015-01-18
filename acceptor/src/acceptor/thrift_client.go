@@ -1,13 +1,13 @@
 package acceptor
 
 import (
-	"deep_score_service"
+	"deepscore"
 	"fmt"
 	"git.apache.org/thrift.git/lib/go/thrift"
 )
 
 type RichClient struct {
-  Client *deep_score_service.DeepScorerServiceClient
+	Client    *deepscore.DeepScorerServiceClient
 	Transport thrift.TTransport
 }
 
@@ -25,6 +25,6 @@ func NewDataStreamClient(addr string) (*RichClient, error) {
 	if err := transport.Open(); err != nil {
 		return nil, err
 	}
-  richclient := &RichClient{ Client:deep_score_service.NewDeepScorerServiceClientFactory(transport, protocolFactory), Transport:transport}
-  return richclient, nil
+	richclient := &RichClient{Client: deepscore.NewDeepScorerServiceClientFactory(transport, protocolFactory), Transport: transport}
+	return richclient, nil
 }

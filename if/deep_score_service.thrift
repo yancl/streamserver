@@ -1,4 +1,5 @@
 namespace go deepscore
+namespace cpp deepscore
 
 enum ResultCode {
   OK,
