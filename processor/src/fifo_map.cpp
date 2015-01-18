@@ -2,13 +2,14 @@
 #include <iostream>
 using namespace std;
 
-FIFOMap::FIFOMap():_inited(false),_wait_for_next_message(true) {
+FIFOMap::FIFOMap(unsigned map_size):_inited(false),_wait_for_next_message(true),_map_size(map_size){
   if (!_inited) {
     pthread_mutex_init(&_fifo_mutex, NULL);
     pthread_mutex_init(&_next_message_mutex, NULL);
     pthread_cond_init(&_next_message_cond, NULL);
     //set to invalid
     _prev_message_itr = _current_message_itr = _messages.end();
+    _fifo_map = new std::tr1::unordered_map<std::string, std::list<Message*>::iterator>(_map_size);
     _inited = true;
   }
 }
@@ -18,6 +19,7 @@ FIFOMap::~FIFOMap() {
     pthread_mutex_destroy(&_fifo_mutex);
     pthread_mutex_destroy(&_next_message_mutex);
     pthread_cond_destroy(&_next_message_cond);
+    delete _fifo_map;
   }
 }
 
@@ -25,13 +27,13 @@ void FIFOMap::addSlice(const Slice& slice) {
   pthread_mutex_lock(&_fifo_mutex); 
 
   std::list<Message*>::iterator message_iter = _messages.end();
-  std::tr1::unordered_map<std::string, std::list<Message*>::iterator>::const_iterator map_citr = _fifo_map.find(slice._key);
-  if (map_citr == _fifo_map.end()) {
+  std::tr1::unordered_map<std::string, std::list<Message*>::iterator>::const_iterator map_citr = _fifo_map->find(slice._key);
+  if (map_citr == _fifo_map->end()) {
     _messages.push_back(new Message());
     message_iter = _messages.end();
     --message_iter;
 
-    _fifo_map.insert(std::make_pair(slice._key, message_iter));
+    _fifo_map->insert(std::make_pair(slice._key, message_iter));
 
     //new message,notify
     notifyNewMessage();

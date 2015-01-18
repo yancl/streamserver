@@ -44,9 +44,8 @@ void ComputeUnit::computeMessage() {
       string err = "";
       Slice* slice = _store->getSlice();
       if (slice == NULL) {
-        continue;
-        //cerr << "found one NULL slice!" << endl;
-        //return;
+        cerr << "found one NULL slice!" << endl;
+        return;
       }
 
       if(slice->_flag == SliceFlag::START) {

@@ -13,7 +13,7 @@
 
 class FIFOMap {
 public:
-  FIFOMap();
+  FIFOMap(unsigned map_size=10000);
   virtual ~FIFOMap();
 
   //add slice to the message slot according to slice.key
@@ -34,7 +34,8 @@ private:
 private:
   bool _inited;
   bool _wait_for_next_message;
-  std::tr1::unordered_map<std::string, std::list<Message*>::iterator> _fifo_map;
+  unsigned _map_size;
+  std::tr1::unordered_map<std::string, std::list<Message*>::iterator>* _fifo_map;
   std::list<Message*> _messages;
   //used to hold last finished message
   std::list<Message*>::iterator _prev_message_itr;
