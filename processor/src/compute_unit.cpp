@@ -116,5 +116,6 @@ END:
 
 
 void deepscore::ComputeUnit::sendJsonResponse(const std::string& host, int port, const std::string& key, const std::string& message) {
+  LOG(INFO) << "send json message for key:[" << key << "] msg:" << message;
   _callback_q->push(CallbackMsg(host, port, key, message));
 }

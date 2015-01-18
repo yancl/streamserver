@@ -60,7 +60,7 @@ deepscore::Slice* deepscore::Message::nextSlice() {
 }
 
 void deepscore::Message::waitForNextSliceInLock() {
-  cout << "begin to cond for next slice ..." << endl;
+  //cout << "begin to cond for next slice ..." << endl;
   struct timeval now;
   struct timespec abs_timeout;
   gettimeofday(&now, NULL);
@@ -70,7 +70,7 @@ void deepscore::Message::waitForNextSliceInLock() {
   _wait_for_next_slice = true;
   pthread_cond_timedwait(&_next_slice_cond, &_next_slice_mutex, &abs_timeout);
   _wait_for_next_slice = false;
-  cout << "cond for next slice finished!" << endl;
+  //cout << "cond for next slice finished!" << endl;
 }
 
 

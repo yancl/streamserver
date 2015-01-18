@@ -37,6 +37,11 @@ void deepscore::Callback::callback(const CallbackMsg& msg) {
 
 std::string deepscore::Callback::makeUrl(const std::string& host, int port, const std::string& prefix) {
   std::ostringstream oss;
-  oss << "http://" << host << ":" << port << "/" << prefix;
+  //NOTE!the url must be strict mode
+  //http://a/b
+  //http://a/b/
+  //http://a//b
+  //the above 3 are not processed same by acceptor server(GOLang implement)
+  oss << "http://" << host << ":" << port << prefix;
   return oss.str(); 
 }
