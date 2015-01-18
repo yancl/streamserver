@@ -10,7 +10,7 @@ all:
 	gen-cpp/deep_score_service_constants.cpp \
 	gen-cpp/DeepScorerService.cpp \
 	gen-cpp/deep_score_service_types.cpp \
-	-L/usr/local/lib/ -L/usr/lib64/ -lthrift -lthriftnb -levent -lcurl -lboost_system -lpthread -lrt
+	-L/usr/local/lib/ -L/usr/lib64/ -lthrift -lthriftnb -levent -lcurl -lglog -lboost_system -lpthread -lrt
 
 clean:
 	rm -f ../bin/deep_score_server

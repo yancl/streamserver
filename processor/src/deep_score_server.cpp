@@ -21,6 +21,7 @@
 // @author Avinash Lakshman
 // @author Anthony Giardullo
 
+#include <glog/logging.h>
 #include "include/common.h"
 #include "include/compute_unit.h"
 #include "include/deep_score_server.h"
@@ -87,6 +88,10 @@ int main(int argc, char **argv) {
 
     // seed random number generation with something reasonably unique
     srand(time(NULL) ^ getpid());
+
+    //init logger
+    google::InitGoogleLogging(argv[0]);
+    
 
     g_SlicePtr = new Slice("X","X",-1,SliceFlag::BROKEN,"X",-1);
 
