@@ -20,6 +20,9 @@ private:
   //one message contains serveral slices
   void computeMessage();
 
+  //send response to caller
+  void sendResponse(const string& url, const string& message);
+
 private:
   Store* _store;
 };

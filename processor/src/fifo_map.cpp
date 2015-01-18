@@ -95,7 +95,7 @@ std::list<Message*>::iterator FIFOMap::nextIter(std::list<Message*>::iterator it
 }
 
 void FIFOMap::waitForNewMessage() {
-  cout << "begin to cond for new messages.." <<endl;
+  //cout << "begin to cond for new messages.." <<endl;
   struct timeval now;
   struct timespec abs_timeout;
   gettimeofday(&now, NULL);
@@ -107,7 +107,7 @@ void FIFOMap::waitForNewMessage() {
   pthread_cond_timedwait(&_next_message_cond, &_next_message_mutex, &abs_timeout);
   _wait_for_next_message = false;
   pthread_mutex_unlock(&_next_message_mutex);
-  cout << "cond for new messages finished!" <<endl;
+  //cout << "cond for new messages finished!" <<endl;
 }
 
 void FIFOMap::notifyNewMessage() {

@@ -1,5 +1,7 @@
 #include "include/compute_unit.h"
+#include "include/http_client.h"
 #include <pthread.h>
+#include <sstream>
 
 void* threadStatic(void *this_ptr) {
   ComputeUnit *compute_ptr = (ComputeUnit*)this_ptr;
@@ -87,7 +89,13 @@ void ComputeUnit::computeMessage() {
         //core code end
 
         //compute over
-        delete slice;
+        ostringstream oss;
+        oss << "http://" << slice->_host << ":" << slice->_port << "/notify";
+        //string url = "http://%s:%d/notify/";
+        string url = oss.str();
+        string msg = "OK";
+        sendResponse(url, msg);
+        ////delete slice;
         return;
       } else if (slice->_flag == SliceFlag::BROKEN) {
         //part of the message will not show,maybe sender restart or send timeout,etc
@@ -105,10 +113,22 @@ void ComputeUnit::computeMessage() {
 END:
     if (failed) {
       cerr << err << endl;
-      delete slice;
+      ////delete slice;
       return;
     }
     //release resource
-    delete slice;
+    ////delete slice;
   }
+}
+
+
+void ComputeUnit::sendResponse(const string& url, const string& message) {
+  CHttpClient http_client;
+  string rsp;
+  int rv = http_client.Get(url, rsp); 
+  if (rv != 0) {
+    cerr << "send rsp failed, rv:" << rv << " url:" << url << endl;
+    return;
+  }
+  cout << "send rsp ok for url:" << url << endl;
 }

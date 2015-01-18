@@ -119,6 +119,7 @@ func sendMessage(client *deep_score_service.DeepScorerServiceClient, message *de
 }
 
 func UploadStream(w http.ResponseWriter, r *http.Request) {
+
 	mr, err := r.MultipartReader()
 	if err != nil {
 		fmt.Printf("make multipart reader failed!\n")
@@ -151,6 +152,7 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
   var number int32
   var slice_flag deep_score_service.SliceFlag = deep_score_service.SliceFlag_START
+
   //send data
 	for {
 		part, err := mr.NextPart()
@@ -179,6 +181,8 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+  //time.Sleep(time.Second * 10)
+
   //send last message
   slice_flag = deep_score_service.SliceFlag_FINISH
   sendMessage(rich_client.Client, &deep_score_service.DataSlice{Key: key, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
@@ -188,7 +192,8 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 }
 
 func NotifyStream(w http.ResponseWriter, r *http.Request) {
-	key := "key"
+  fmt.Println("receive message!")
+	key := "yancl"
 	message := "OK!"
 	result := SendNotify(key, message)
 	if result == false {
