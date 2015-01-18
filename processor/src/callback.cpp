@@ -23,6 +23,7 @@ void deepscore::Callback::run() {
 
 void deepscore::Callback::callback(const CallbackMsg& msg) {
   std::string url = makeUrl(msg._host, msg._port, _callback_url_prefix);
+  url += "?session_key="+ msg._key + "&message=" + msg._msg;
 
   CHttpClient http_client;
   std::string rsp;
