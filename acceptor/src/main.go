@@ -185,7 +185,6 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	//send last message
 	slice_flag = deepscore.SliceFlag_FINISH
 	sendMessage(rich_client.Client, &deepscore.DataSlice{Key: key, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
-	fmt.Println("send last message done!")
 
 	result := WaitForNotify(key)
 	fmt.Fprintf(w, "result is:%s \n", result)
