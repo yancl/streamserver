@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var ReqRouter *RequestRouter
+
 //stream part begin
 const CHUNK_SIZE = 4 * 1024
 
@@ -49,18 +51,20 @@ func sendNotify(key string, message string) bool {
 	return false
 }
 
-func sendMessage(client *deepscore.DeepScorerServiceClient, message *deepscore.DataSlice) error {
+//func sendMessage(client *deepscore.DeepScorerServiceClient, sessionKey string, message *deepscore.DataSlice) error {
+func sendMessage(sessionKey string, message *deepscore.DataSlice) error {
 	//compose messages
 	capacity := 1
 	messages := make([]*deepscore.DataSlice, 0, capacity)
 	messages = append(messages, message)
 
+	err := ReqRouter.SendMessage(sessionKey, messages)
 	//send messages
-	r, err := client.AddDataSliceStream(messages)
+	//r, err := client.AddDataSliceStream(messages)
 	if err != nil {
 		fmt.Printf("add messages failed,err:%s \n", err)
 	} else {
-		fmt.Printf("add messages ok, r:%v\n", r)
+		fmt.Printf("add messages ok")
 	}
 	return err
 }
@@ -75,7 +79,7 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	host := "127.0.0.1"
 	var port int32 = 8081
 
-	addr := "localhost:1463"
+	/*addr := "localhost:1463"
 	rich_client, err := NewDataStreamClient(addr)
 	if err != nil {
 		fmt.Printf("create thrift client failed!, err:%s\n", err)
@@ -83,11 +87,12 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer rich_client.Transport.Close()
+	*/
 
 	var number int32
 	var slice_flag deepscore.SliceFlag = deepscore.SliceFlag_START
 
-	var session_key string
+	var sessionKey string
 
 	for {
 		p, err := mr.NextPart()
@@ -107,7 +112,7 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if formname == "session_key" {
-				session_key = string(buffer[0:size])
+				sessionKey = string(buffer[0:size])
 			}
 			continue
 		}
@@ -119,9 +124,10 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 			if err == io.EOF {
 				break
 			}
-			if session_key != "" {
-				sendMessage(rich_client.Client,
-					&deepscore.DataSlice{Key: session_key, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: host, Port: port})
+			if sessionKey != "" {
+				//sendMessage(rich_client.Client,
+				sendMessage(sessionKey,
+					&deepscore.DataSlice{Key: sessionKey, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: host, Port: port})
 			} else {
 				fmt.Println("session key is null, will not send message!")
 			}
@@ -132,11 +138,12 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
 	//send last message
 	slice_flag = deepscore.SliceFlag_FINISH
-	if session_key != "" {
-		sendMessage(rich_client.Client,
-			&deepscore.DataSlice{Key: session_key, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
+	if sessionKey != "" {
+		//sendMessage(rich_client.Client,
+		sendMessage(sessionKey,
+			&deepscore.DataSlice{Key: sessionKey, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
 
-		result := waitForNotify(session_key)
+		result := waitForNotify(sessionKey)
 		fmt.Fprintf(w, "result is:%s \n", result)
 	} else {
 		fmt.Println("session key is null, will not send message!")
@@ -145,36 +152,36 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
 func Notify(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("receive message!")
-	var session_key string
+	var sessionKey string
 	var message string
 	/*
 		if r.Method == "POST" {
-			session_key = r.PostFormValue("session_key")
+			sessionKey = r.PostFormValue("session_key")
 			message = r.PostFormValue("message")
 		}*/
 	if r.Method == "GET" {
-		session_keys := r.URL.Query()["session_key"]
-		if len(session_keys) != 0 {
-			session_key = session_keys[0]
+		sessionKeys := r.URL.Query()["session_key"]
+		if len(sessionKeys) != 0 {
+			sessionKey = sessionKeys[0]
 		}
 		messages := r.URL.Query()["message"]
 		if len(messages) != 0 {
 			message = messages[0]
-			fmt.Printf("session_key:%s, message:%s", session_key, message)
+			fmt.Printf("sessionKey:%s, message:%s", sessionKey, message)
 		}
 	}
 
-	if session_key == "" || message == "" {
-		fmt.Printf("receive message session_key:%s or message:%s part is empty!\n", session_key, message)
+	if sessionKey == "" || message == "" {
+		fmt.Printf("receive message sessionKey:%s or message:%s part is empty!\n", sessionKey, message)
 		return
 	}
 
-	result := sendNotify(session_key, message)
+	result := sendNotify(sessionKey, message)
 	if result == false {
-		fmt.Fprintf(w, "process message failed for key:%s!\n", session_key)
+		fmt.Fprintf(w, "process message failed for key:%s!\n", sessionKey)
 		return
 	}
-	fmt.Fprintf(w, "process message ok for key:%s!\n", session_key)
+	fmt.Fprintf(w, "process message ok for key:%s!\n", sessionKey)
 }
 
 // 1MB, more data will write to disk file tempory
