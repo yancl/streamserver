@@ -6,15 +6,15 @@
 #include <string>
 #include <pthread.h>
 #include <semaphore.h>
+#include <sys/time.h>
 #include "slice.h"
 #include "message.h"
+#include "../gen-cpp/deep_score_service_types.h"
 
 class FIFOMap {
 public:
   FIFOMap();
   virtual ~FIFOMap();
-
-  void init();
 
   //add slice to the message slot according to slice.key
   void addSlice(const Slice& slice);
@@ -26,18 +26,27 @@ public:
   std::list<Message*>* getConsumedMessages(int count);
 
 private:
+  bool isNextIterEnd(std::list<Message*>::const_iterator citr);
+  std::list<Message*>::iterator nextIter(std::list<Message*>::iterator itr);
+  void waitForNewMessage();
+  void notifyNewMessage();
+
+private:
+  bool _inited;
+  bool _wait_for_next_message;
   std::tr1::unordered_map<std::string, std::list<Message*>::iterator> _fifo_map;
   std::list<Message*> _messages;
+  //used to hold last finished message
+  std::list<Message*>::iterator _prev_message_itr;
+  //used to hold the current reading message
   std::list<Message*>::iterator _current_message_itr;
 
-  //protect when change the fifo map struct
+  //protect _fifo_map,_messages,{_current,_prev}_message_itr
   pthread_mutex_t _fifo_mutex;
 
-  //protect when change the fifo message struct
-  pthread_mutex_t _next_slice_mutex;
-
-  //block on this cond when get the next slice
-  pthread_cond_t _next_slice_cond;
+  //protect _wait_for_next_message
+  pthread_mutex_t _next_message_mutex;
+  pthread_cond_t _next_message_cond;
 
 };
 

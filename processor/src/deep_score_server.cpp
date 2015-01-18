@@ -32,6 +32,7 @@ using namespace std;
 using boost::shared_ptr;
 
 shared_ptr<StreamHandler> g_Handler;
+Slice* g_SlicePtr;
 
 #define DEFAULT_CHECK_PERIOD       5
 #define DEFAULT_MAX_MSG_PER_SECOND 0
@@ -87,10 +88,14 @@ int main(int argc, char **argv) {
     // seed random number generation with something reasonably unique
     srand(time(NULL) ^ getpid());
 
+    g_SlicePtr = new Slice("X","X",-1,SliceFlag::BROKEN,"X",-1);
+
     g_Handler = shared_ptr<StreamHandler>(new StreamHandler(port, config_file));
     g_Handler->initialize();
 
     scribe::startServer(); // never returns
+
+    delete g_SlicePtr;
 
   } catch(const std::exception& e) {
     LOG_OPER("Exception in main: %s", e.what());
