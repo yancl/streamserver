@@ -1,5 +1,6 @@
 acceptor/downloads/*
-acceptor/gen-go/*
+acceptor/gen-go/src/*
+acceptor/gen-go/pkg/*
 processor/gen-cpp/*
 processor/bin/*
 acceptor/src/git.apache.org/
