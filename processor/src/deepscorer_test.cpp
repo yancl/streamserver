@@ -25,7 +25,7 @@ void test_open_scorer(const char* mode, const char* conf, const char* data_file)
   while (1)
   {
     short buf[BUF_SIZE];
-    out_size = fread(buf, sizeof(*buf), BUF_SIZE, fh2);
+    int out_size = fread(buf, sizeof(*buf), BUF_SIZE, fh2);
     if (out_size == 0) break;
     DeepOpenScorerProcessRaw(dos, (const short *)buf, out_size);
   }
