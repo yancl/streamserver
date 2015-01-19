@@ -14,22 +14,22 @@ public:
 
 public:
   //creator api
-  void addSlice(const Slice& slice);
+  void addSlice(const Slice* slice);
 
   //consumer api
-  Slice* nextSlice();
+  const Slice* nextSlice();
   
 
 private:
   void waitForNextSliceInLock();
   void notifyNextSliceInLock();
-  std::list<Slice*>::iterator nextSliceIter(std::list<Slice*>::iterator itr);
+  std::list<const Slice*>::iterator nextSliceIter(std::list<const Slice*>::iterator itr);
 
 private:
   time_t _create_time;
-  std::list<Slice*> _slices;
-  std::list<Slice*>::iterator _prev_slice_iter;
-  std::list<Slice*>::iterator _next_slice_iter;
+  std::list<const Slice*> _slices;
+  std::list<const Slice*>::iterator _prev_slice_iter;
+  std::list<const Slice*>::iterator _next_slice_iter;
   int _next_slice_seq;
   bool _wait_for_next_slice;
   bool _broken;

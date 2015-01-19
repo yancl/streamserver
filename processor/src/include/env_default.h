@@ -51,19 +51,6 @@
 namespace deepscore {
 
 /*
- * Concurrency mechanisms
- */
-
-namespace concurrency {
-  using apache::thrift::concurrency::ReadWriteMutex;
-
-  // returns a new instance of read/write mutex.
-  // you can choose different implementations based on your needs.
-  boost::shared_ptr<ReadWriteMutex> createReadWriteMutex();
-
-} // !namespace deepscore::concurrency
-
-/*
  * Time functions
  */
 

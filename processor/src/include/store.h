@@ -14,8 +14,8 @@ public:
   virtual ~Store();
 
 public:
-  void addSlice(const Slice& slice);
-  Slice* getSlice();
+  void addSlice(const Slice* slice);
+  const Slice* getSlice();
 
 private:
   FIFOMap* _fifo_map;

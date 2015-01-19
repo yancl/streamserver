@@ -23,17 +23,17 @@ deepscore::FIFOMap::~FIFOMap() {
   }
 }
 
-void deepscore::FIFOMap::addSlice(const Slice& slice) {
+void deepscore::FIFOMap::addSlice(const Slice* slice) {
   pthread_mutex_lock(&_fifo_mutex); 
 
   std::list<Message*>::iterator message_iter = _messages.end();
-  std::tr1::unordered_map<std::string, std::list<Message*>::iterator>::const_iterator map_citr = _fifo_map->find(slice._key);
+  std::tr1::unordered_map<std::string, std::list<Message*>::iterator>::const_iterator map_citr = _fifo_map->find(slice->_key);
   if (map_citr == _fifo_map->end()) {
     _messages.push_back(new Message());
     message_iter = _messages.end();
     --message_iter;
 
-    _fifo_map->insert(std::make_pair(slice._key, message_iter));
+    _fifo_map->insert(std::make_pair(slice->_key, message_iter));
 
     //new message,notify
     notifyNewMessage();
@@ -41,13 +41,13 @@ void deepscore::FIFOMap::addSlice(const Slice& slice) {
   } else {
     message_iter = map_citr->second;
   }
-  //add slice the message bucket
+  //add slice to the message bucket
   (*message_iter)->addSlice(slice);
 
   pthread_mutex_unlock(&_fifo_mutex);
 }
 
-deepscore::Slice* deepscore::FIFOMap::nextSlice() {
+const deepscore::Slice* deepscore::FIFOMap::nextSlice() {
   while (true) {
     //get current message iterator
     pthread_mutex_lock(&_fifo_mutex);
@@ -65,7 +65,7 @@ deepscore::Slice* deepscore::FIFOMap::nextSlice() {
 
     //get slice from current message iterator
     if (message_itr != message_itr_end) {
-      Slice* slice = (*message_itr)->nextSlice();
+      const Slice* slice = (*message_itr)->nextSlice();
       //check should we move on to next message
       if ((slice->_flag == SliceFlag::FINISH) || 
           (slice->_flag == SliceFlag::BROKEN)) {
@@ -80,12 +80,6 @@ deepscore::Slice* deepscore::FIFOMap::nextSlice() {
       waitForNewMessage();
     }
   }
-}
-
-std::list<deepscore::Message*>* deepscore::FIFOMap::getConsumedMessages(int count) {
-  pthread_mutex_lock(&_fifo_mutex); 
-  pthread_mutex_unlock(&_fifo_mutex);
-  return NULL;
 }
 
 std::list<deepscore::Message*>::iterator deepscore::FIFOMap::nextIter(std::list<deepscore::Message*>::iterator itr) {

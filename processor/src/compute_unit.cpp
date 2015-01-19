@@ -1,6 +1,16 @@
 #include <pthread.h>
 #include <sstream>
+#include <iostream>
 #include "include/compute_unit.h"
+
+void printTime() {
+    time_t now;
+    char dbgtime[26];
+    time(&now);
+    ctime_r(&now, dbgtime);
+    dbgtime[24] = '\0';
+    std::cout << "current time:" << dbgtime << std::endl;
+}
 
 void* deepscore::ComputeUnit::threadStatic(void *this_ptr) {
   ComputeUnit *compute_ptr = (ComputeUnit*)this_ptr;
@@ -15,7 +25,7 @@ deepscore::ComputeUnit::ComputeUnit(BlockQueue<CallbackMsg>* callback_q):
 
 deepscore::ComputeUnit::~ComputeUnit() {}
 
-void deepscore::ComputeUnit::addSlice(const Slice& slice) {
+void deepscore::ComputeUnit::addSlice(const Slice* slice) {
   _store->addSlice(slice);
 }
 
@@ -31,14 +41,14 @@ void deepscore::ComputeUnit::run() {
 }
 
 void deepscore::ComputeUnit::computeMessage() {
+    struct timeval start, end;
     //state machine start!
     bool meet_message_begin = false;
-
     while(true) {
       bool failed = false;
       std::string err;
       std::string warning;
-      Slice* slice = _store->getSlice();
+      const Slice* slice = _store->getSlice();
       if (slice == NULL) {
         LOG(FATAL) << "**NULL** slice happend!";
         break;
@@ -55,6 +65,7 @@ void deepscore::ComputeUnit::computeMessage() {
           goto END;
         }
         meet_message_begin = true;
+        gettimeofday(&start, NULL);
 
         //compute code
       } else if (slice->_flag == SliceFlag::MIDDLE) {
@@ -77,6 +88,9 @@ void deepscore::ComputeUnit::computeMessage() {
 
         LOG(INFO) << "finish to process message for key:" << slice->_key;
 
+        gettimeofday(&end, NULL);
+        unsigned long timeuse = 1000 * ( end.tv_sec - start.tv_sec ) + (end.tv_usec - start.tv_usec)/1000;
+        std::cout << "cost:(" << timeuse << ")ms" << std::endl;
 
         std::string message = "OK!";
         sendJsonResponse(slice->_host, slice->_port, slice->_key, message);
@@ -96,18 +110,17 @@ void deepscore::ComputeUnit::computeMessage() {
         goto END;
       }
 
-END:
-    if (failed) {
-      if (!err.empty()) {
-        LOG(ERROR) << err;
+    END:
+      if (failed) {
+        if (!err.empty()) {
+          LOG(ERROR) << err;
+        }
+        if (!warning.empty()) {
+          LOG(WARNING) << warning;
+        }
+        break;
       }
-      if (!warning.empty()) {
-        LOG(WARNING) << warning;
-      }
-      break;
-    }
-  }
-
+    }//end while
   //release resource
 }
 

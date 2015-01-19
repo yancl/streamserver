@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <sstream>
 #include "include/compute_unit.h"
+#include <iostream>
 
 #include "include/deep-scorer.h"
 #include "include/deep-open-scorer.h"
@@ -18,7 +19,7 @@ deepscore::ComputeUnit::ComputeUnit(BlockQueue<CallbackMsg>* callback_q):
 
 deepscore::ComputeUnit::~ComputeUnit() {}
 
-void deepscore::ComputeUnit::addSlice(const Slice& slice) {
+void deepscore::ComputeUnit::addSlice(const Slice* slice) {
   _store->addSlice(slice);
 }
 
@@ -34,6 +35,7 @@ void deepscore::ComputeUnit::run() {
 }
 
 void deepscore::ComputeUnit::computeMessage() {
+    struct timeval start, end;
     //state machine start!
     bool meet_message_begin = false;
     DeepOpenScorer *dos = NULL;
@@ -42,7 +44,7 @@ void deepscore::ComputeUnit::computeMessage() {
       bool failed = false;
       std::string err;
       std::string warning;
-      Slice* slice = _store->getSlice();
+      const Slice* slice = _store->getSlice();
       if (slice == NULL) {
         LOG(FATAL) << "**NULL** slice happend!";
         break;
@@ -59,6 +61,7 @@ void deepscore::ComputeUnit::computeMessage() {
           goto END;
         }
         meet_message_begin = true;
+        gettimeofday(&start, NULL);
 
         //compute code
         const char* resource_type = "NNET";
@@ -89,11 +92,16 @@ void deepscore::ComputeUnit::computeMessage() {
         DeepOpenScorerEnd(dos);
         char const *result = DeepOpenScorerJsonOutput(dos);
 
+        gettimeofday(&end, NULL);
+        unsigned long timeuse = 1000 * ( end.tv_sec - start.tv_sec ) + (end.tv_usec - start.tv_usec)/1000;
+        std::cout << "cost:(" << timeuse << ")ms" << std::endl;
+
         //LOG(DEBUG) << "finish to process message for key:" << slice._key;
         LOG(INFO) << "finish to process message for key:" << slice->_key;
 
 
         std::string message = std::string(result);
+        std::cout << "output:" << message << std::endl;
         sendJsonResponse(slice->_host, slice->_port, slice->_key, message);
         break;
       } else if (slice->_flag == SliceFlag::BROKEN) {
@@ -111,17 +119,17 @@ void deepscore::ComputeUnit::computeMessage() {
         goto END;
       }
 
-END:
-    if (failed) {
-      if (!err.empty()) {
-        LOG(ERROR) << err;
+    END:
+      if (failed) {
+        if (!err.empty()) {
+          LOG(ERROR) << err;
+        }
+        if (!warning.empty()) {
+          LOG(WARNING) << warning;
+        }
+        break;
       }
-      if (!warning.empty()) {
-        LOG(WARNING) << warning;
-      }
-      break;
-    }
-    }
+    }//end while
 
   //release resource
   if (dos != NULL) {

@@ -7,7 +7,7 @@ using boost::shared_ptr;
 using namespace deepscore;
 
 shared_ptr<StreamHandler> deepscore::g_Handler;
-deepscore::Slice* deepscore::g_SlicePtr;
+const deepscore::Slice* deepscore::g_SlicePtr;
 
 void print_usage(const char* program_name) {
   std::cout << "Usage: " << program_name << " [-p port] [-c config_file]" << std::endl;

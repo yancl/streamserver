@@ -8,10 +8,10 @@ deepscore::Store::Store() {
 
 deepscore::Store::~Store(){}
 
-void deepscore::Store::addSlice(const Slice& slice) {
+void deepscore::Store::addSlice(const Slice* slice) {
   _fifo_map->addSlice(slice);
 }
 
-deepscore::Slice* deepscore::Store::getSlice() {
+const deepscore::Slice* deepscore::Store::getSlice() {
   return _fifo_map->nextSlice();
 }

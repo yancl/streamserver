@@ -46,7 +46,7 @@ deepscore::ResultCode::type deepscore::StreamHandler::AddDataSliceStream(const s
   std::vector<DataSlice>::const_iterator citr = slices.begin();
   for (;citr != slices.end(); citr++) {
     uint32_t num = deepscore::strhash::hash32(citr->key.c_str());
-    Slice slice(citr->key, citr->val, citr->number, citr->flag, citr->host, citr->port);
+    const Slice* slice = new Slice(citr->key, citr->val, citr->number, citr->flag, citr->host, citr->port);
     (_compute_units[num % TOTAL_COMPUTE_THREAD_NUM])->addSlice(slice);
   }
   return ResultCode::OK;

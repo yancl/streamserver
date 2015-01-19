@@ -30,7 +30,7 @@ func waitForNotify(key string) string {
 	select {
 	case msg := <-receiver:
 		result = msg
-	case <-time.After(time.Second * 3):
+	case <-time.After(time.Second * 60 * 5):
 		result = "Timeout"
 	}
 	return result
@@ -68,6 +68,7 @@ func sendMessage(sessionKey string, message *deepscore.DataSlice) error {
 }
 
 func UploadStream(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	mr, err := r.MultipartReader()
 	if err != nil {
 		fmt.Printf("make multipart reader failed!\n")
@@ -123,6 +124,8 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	end := time.Now()
+	fmt.Printf("cost time is:%v", end.Sub(start))
 	//send last message
 	slice_flag = deepscore.SliceFlag_FINISH
 	if sessionKey != "" {

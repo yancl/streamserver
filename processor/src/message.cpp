@@ -14,15 +14,14 @@ deepscore::Message::~Message(){
   pthread_cond_destroy(&_next_slice_cond);
 }
 
-void deepscore::Message::addSlice(const Slice& slice) {
+void deepscore::Message::addSlice(const Slice* slice) {
   pthread_mutex_lock(&_next_slice_mutex);
-  _slices.push_back(new Slice(slice._key, slice._val, slice._number, slice._flag, slice._host, slice._port));
-
+  _slices.push_back(slice);
   notifyNextSliceInLock();
   pthread_mutex_unlock(&_next_slice_mutex);
 }
 
-deepscore::Slice* deepscore::Message::nextSlice() {
+const deepscore::Slice* deepscore::Message::nextSlice() {
   while (true) {
     bool need_wait = false;
     pthread_mutex_lock(&_next_slice_mutex);
@@ -37,7 +36,7 @@ deepscore::Slice* deepscore::Message::nextSlice() {
     if (_next_slice_iter == _slices.end()) {
       need_wait = true;
     } else {
-      Slice* slice_ptr = NULL;
+      const Slice* slice_ptr = NULL;
       if ((*_next_slice_iter)->_number == _next_slice_seq) {
         slice_ptr = (*_next_slice_iter);
         _next_slice_seq++;
@@ -81,10 +80,10 @@ void deepscore::Message::notifyNextSliceInLock() {
   }
 }
 
-std::list<deepscore::Slice*>::iterator deepscore::Message::nextSliceIter(std::list<deepscore::Slice*>::iterator itr) {
+std::list<const deepscore::Slice*>::iterator deepscore::Message::nextSliceIter(std::list<const deepscore::Slice*>::iterator itr) {
   if (itr == _slices.end()) {
     return itr;
   }
-  std::list<deepscore::Slice*>::iterator copied_iter = itr;
+  std::list<const deepscore::Slice*>::iterator copied_iter = itr;
   return ++copied_iter;
 }

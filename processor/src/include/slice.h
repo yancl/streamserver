@@ -18,7 +18,7 @@ struct Slice {
   }
 };
 
-extern Slice* g_SlicePtr;
+extern const Slice* g_SlicePtr;
 
 }
 

@@ -11,7 +11,7 @@ class ComputeUnit {
 public:
   ComputeUnit(BlockQueue<CallbackMsg>* callback_q);
   virtual ~ComputeUnit();
-  void addSlice(const Slice& slice);
+  void addSlice(const Slice* slice);
 
 public:
   static void* threadStatic(void *this_ptr);

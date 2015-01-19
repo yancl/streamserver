@@ -19,13 +19,10 @@ public:
   virtual ~FIFOMap();
 
   //add slice to the message slot according to slice.key
-  void addSlice(const Slice& slice);
+  void addSlice(const Slice* slice);
 
   //get next slice
-  Slice* nextSlice();
-
-  //get consumed messages,log it or just delete it
-  std::list<Message*>* getConsumedMessages(int count);
+  const Slice* nextSlice();
 
 private:
   bool isNextIterEnd(std::list<Message*>::const_iterator citr);

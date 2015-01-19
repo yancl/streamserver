@@ -1,4 +1,4 @@
-framework:
+all:
 	g++ -o ../bin/deep_score_server \
 	deep_score_server.cpp \
 	stream_handler.cpp \
