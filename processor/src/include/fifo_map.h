@@ -15,7 +15,7 @@ namespace deepscore {
 
 class FIFOMap {
 public:
-  FIFOMap(unsigned map_size=10000);
+  FIFOMap(int map_size);
   virtual ~FIFOMap();
 
   //add slice to the message slot according to slice.key
@@ -32,7 +32,7 @@ private:
 private:
   bool _inited;
   bool _wait_for_next_message;
-  unsigned _map_size;
+  int _map_size;
   std::tr1::unordered_map<std::string, std::list<Message*>::iterator>* _fifo_map;
   std::list<Message*> _messages;
   const Message* _to_be_delete_msg;

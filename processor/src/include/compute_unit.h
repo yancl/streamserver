@@ -9,7 +9,7 @@ namespace deepscore {
 
 class ComputeUnit {
 public:
-  ComputeUnit(BlockQueue<CallbackMsg>* callback_q);
+  ComputeUnit(BlockQueue<CallbackMsg>* callback_q, int fifo_map_size);
   virtual ~ComputeUnit();
   void addSlice(const Slice* slice);
 

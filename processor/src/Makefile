@@ -10,6 +10,7 @@ framework:
 	callback.cpp \
 	http_client.cpp \
 	url_coder.cpp \
+	ini_parser.cpp \
 	gen-cpp/deep_score_service_constants.cpp \
 	gen-cpp/DeepScorerService.cpp \
 	gen-cpp/deep_score_service_types.cpp \
@@ -28,6 +29,7 @@ deepscorer:
   callback.cpp \
 	http_client.cpp \
 	url_coder.cpp \
+	ini_parser.cpp \
   gen-cpp/deep_score_service_constants.cpp \
   gen-cpp/DeepScorerService.cpp \
   gen-cpp/deep_score_service_types.cpp \

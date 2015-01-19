@@ -10,9 +10,9 @@ void* deepscore::ComputeUnit::threadStatic(void *this_ptr) {
   return NULL;
 }
 
-deepscore::ComputeUnit::ComputeUnit(BlockQueue<CallbackMsg>* callback_q):
+deepscore::ComputeUnit::ComputeUnit(BlockQueue<CallbackMsg>* callback_q, int fifo_map_size):
   _callback_q(callback_q) {
-  _store = new Store();
+  _store = new Store(fifo_map_size);
 }
 
 deepscore::ComputeUnit::~ComputeUnit() {}

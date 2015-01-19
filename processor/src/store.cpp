@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-deepscore::Store::Store() {
-  _fifo_map = new FIFOMap();
+deepscore::Store::Store(int fifo_map_size) {
+  _fifo_map = new FIFOMap(fifo_map_size);
 }
 
 deepscore::Store::~Store(){}

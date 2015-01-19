@@ -24,6 +24,7 @@
 #ifndef STREAM_SERVER_SERVER_H
 #define STREAM_SERVER_SERVER_H
 
+#include "ini_parser.h"
 #include "compute_unit.h"
 #include "../gen-cpp/DeepScorerService.h"
 
@@ -34,13 +35,13 @@ const int TOTAL_COMPUTE_THREAD_NUM = 16;
 class StreamHandler : virtual public DeepScorerServiceIf {
 
  public:
-  StreamHandler(unsigned long int port, const std::string& conf_file);
+  StreamHandler(int port, const IniParser& parser);
   ~StreamHandler();
 
   void initialize();
   ResultCode::type AddDataSliceStream(const std::vector<DataSlice> & slices);
 
-  unsigned long int port; // it's long because that's all I implemented in the conf class
+  int port; // it's long because that's all I implemented in the conf class
 
   // number of threads processing new Thrift connections
   size_t numThriftServerThreads;
@@ -76,9 +77,13 @@ class StreamHandler : virtual public DeepScorerServiceIf {
   const StreamHandler& operator=(const StreamHandler& rhs);
 
 private:
+  IniParser _ini_parser;
+  int _compute_thread_num;
   pthread_t _callback_handler;
-  pthread_t _thread_handlers[TOTAL_COMPUTE_THREAD_NUM];
-  ComputeUnit* _compute_units[TOTAL_COMPUTE_THREAD_NUM];
+  //pthread_t _thread_handlers[TOTAL_COMPUTE_THREAD_NUM];
+  //ComputeUnit* _compute_units[TOTAL_COMPUTE_THREAD_NUM];
+  pthread_t* _thread_handlers;
+  ComputeUnit** _compute_units;
   BlockQueue<CallbackMsg>* _callback_q_ptr;
 };
 extern boost::shared_ptr<StreamHandler> g_Handler;

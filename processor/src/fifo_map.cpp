@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-deepscore::FIFOMap::FIFOMap(unsigned map_size):_inited(false),_wait_for_next_message(true),_map_size(map_size){
+deepscore::FIFOMap::FIFOMap(int map_size):_inited(false),_wait_for_next_message(true),_map_size(map_size){
   if (!_inited) {
     pthread_mutex_init(&_fifo_mutex, NULL);
     //pthread_mutex_init(&_next_message_mutex, NULL);

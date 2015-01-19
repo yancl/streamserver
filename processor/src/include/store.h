@@ -10,7 +10,7 @@ namespace deepscore {
 
 class Store {
 public:
-  Store();
+  Store(int fifo_map_size);
   virtual ~Store();
 
 public:
