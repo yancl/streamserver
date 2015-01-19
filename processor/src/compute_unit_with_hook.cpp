@@ -2,6 +2,9 @@
 #include <sstream>
 #include "include/compute_unit.h"
 
+#include "include/deep-scorer.h"
+#include "include/deep-open-scorer.h"
+
 void* deepscore::ComputeUnit::threadStatic(void *this_ptr) {
   ComputeUnit *compute_ptr = (ComputeUnit*)this_ptr;
   compute_ptr->run();
@@ -33,6 +36,7 @@ void deepscore::ComputeUnit::run() {
 void deepscore::ComputeUnit::computeMessage() {
     //state machine start!
     bool meet_message_begin = false;
+    DeepOpenScorer *dos = NULL;
 
     while(true) {
       bool failed = false;
@@ -57,6 +61,13 @@ void deepscore::ComputeUnit::computeMessage() {
         meet_message_begin = true;
 
         //compute code
+        const char* resource_type = "NNET";
+        const char* resource_conf = "/home/yxf/testbed/nnet.config";
+        const char* qid = "IS20001";
+        dos = DeepOpenScorerNew(resource_type);
+        DeepOpenScorerStart(dos, resource_conf);
+        DeepOpenScorerSetQid(dos, qid);
+
       } else if (slice->_flag == SliceFlag::MIDDLE) {
         if (!meet_message_begin) {
           err = "[MIDDLE]unorder message happend for key:" + slice->_key;
@@ -65,6 +76,7 @@ void deepscore::ComputeUnit::computeMessage() {
         }
 
         //compute code
+        DeepOpenScorerProcessRaw(dos, (const short *)slice->_val.c_str(), slice->_val.length()/2);
 
       } else if (slice->_flag == SliceFlag::FINISH) {
         if (!meet_message_begin) {
@@ -74,11 +86,14 @@ void deepscore::ComputeUnit::computeMessage() {
         }
 
         //compute code
+        DeepOpenScorerEnd(dos);
+        char const *result = DeepOpenScorerJsonOutput(dos);
 
+        //LOG(DEBUG) << "finish to process message for key:" << slice._key;
         LOG(INFO) << "finish to process message for key:" << slice->_key;
 
 
-        std::string message = "OK!";
+        std::string message = string(result);
         sendJsonResponse(slice->_host, slice->_port, slice->_key, message);
         break;
       } else if (slice->_flag == SliceFlag::BROKEN) {
@@ -106,9 +121,12 @@ END:
       }
       break;
     }
-  }
+    }
 
   //release resource
+  if (dos != NULL) {
+    DeepOpenScorerDestroy(dos);
+  }
 }
 
 
