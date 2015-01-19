@@ -93,7 +93,7 @@ void deepscore::ComputeUnit::computeMessage() {
         LOG(INFO) << "finish to process message for key:" << slice->_key;
 
 
-        std::string message = string(result);
+        std::string message = std::string(result);
         sendJsonResponse(slice->_host, slice->_port, slice->_key, message);
         break;
       } else if (slice->_flag == SliceFlag::BROKEN) {
