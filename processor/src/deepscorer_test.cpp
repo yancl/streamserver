@@ -12,8 +12,8 @@
 #include <string.h>
 #include <iostream>
 
-#include "../include/deep-scorer.h"
-#include "../include/deep-open-scorer.h"
+#include "include/deep-scorer.h"
+#include "include/deep-open-scorer.h"
 //#include "../utils/gettime.h"
 
 
