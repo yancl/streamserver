@@ -125,7 +125,7 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	}
 
 	end := time.Now()
-	fmt.Printf("cost time is:%v", end.Sub(start))
+	fmt.Printf("cost time is:%v\n", end.Sub(start))
 	//send last message
 	slice_flag = deepscore.SliceFlag_FINISH
 	if sessionKey != "" {
@@ -133,6 +133,8 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 			&deepscore.DataSlice{Key: sessionKey, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
 
 		result := waitForNotify(sessionKey)
+		end2 := time.Now()
+		fmt.Printf("total cost time is:%v\n", end2.Sub(start))
 		fmt.Fprintf(w, "result is:%s \n", result)
 	} else {
 		fmt.Println("session key is null, will not send message!")
@@ -143,28 +145,31 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("receive message!")
 	var sessionKey string
 	var message string
-	/*
-		if r.Method == "POST" {
-			sessionKey = r.PostFormValue("session_key")
-			message = r.PostFormValue("message")
-		}*/
-	if r.Method == "GET" {
-		sessionKeys := r.URL.Query()["session_key"]
-		if len(sessionKeys) != 0 {
-			sessionKey = sessionKeys[0]
-		}
-		messages := r.URL.Query()["message"]
-		if len(messages) != 0 {
-			message = messages[0]
-			fmt.Printf("sessionKey:%s, message:%s", sessionKey, message)
-		}
+
+	if r.Method == "POST" {
+		sessionKey = r.PostFormValue("session_key")
+		message = r.PostFormValue("message")
 	}
+
+	/*
+		if r.Method == "GET" {
+			sessionKeys := r.URL.Query()["session_key"]
+			if len(sessionKeys) != 0 {
+				sessionKey = sessionKeys[0]
+			}
+			messages := r.URL.Query()["message"]
+			if len(messages) != 0 {
+				message = messages[0]
+				fmt.Printf("sessionKey:%s, message:%s", sessionKey, message)
+			}
+		}*/
 
 	if sessionKey == "" || message == "" {
 		fmt.Printf("receive message sessionKey:%s or message:%s part is empty!\n", sessionKey, message)
 		return
 	}
 
+	fmt.Printf("sessionKey:%s,message:%s\n", sessionKey, message)
 	result := sendNotify(sessionKey, message)
 	if result == false {
 		fmt.Fprintf(w, "process message failed for key:%s!\n", sessionKey)
