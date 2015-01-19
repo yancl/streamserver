@@ -12,6 +12,7 @@ all:
 	gen-cpp/deep_score_service_constants.cpp \
 	gen-cpp/DeepScorerService.cpp \
 	gen-cpp/deep_score_service_types.cpp \
+	/home/yxf/deep-scorer/src/lls/lib/libdeepscorer.a \
 	-L/usr/local/lib/ -L/usr/lib64/ -lthrift -lthriftnb -levent -lcurl -lglog -lboost_thread -lboost_system -lpthread -lrt
 
 clean:

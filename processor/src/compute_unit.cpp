@@ -2,6 +2,9 @@
 #include <sstream>
 #include "include/compute_unit.h"
 
+#include "include/deep-scorer.h"
+#include "include/deep-open-scorer.h"
+
 void* deepscore::ComputeUnit::threadStatic(void *this_ptr) {
   ComputeUnit *compute_ptr = (ComputeUnit*)this_ptr;
   compute_ptr->run();
@@ -33,6 +36,8 @@ void deepscore::ComputeUnit::run() {
 void deepscore::ComputeUnit::computeMessage() {
     //state machine start!
     bool meet_message_begin = false;
+    DeepOpenScorer *dos = NULL;
+
     while(true) {
       bool failed = false;
       std::string err;
@@ -55,7 +60,12 @@ void deepscore::ComputeUnit::computeMessage() {
         }
         meet_message_begin = true;
 
-        //compute code
+        //compute  code
+        const char* argv1 = "argv1";
+        const char* argv2 = "argv2";
+        dos = DeepOpenScorerNew(argv1);
+        DeepOpenScorerStart(dos, argv2);
+        DeepOpenScorerSetQid(dos, "IS20001");
 
       } else if (slice->_flag == SliceFlag::MIDDLE) {
         if (!meet_message_begin) {
@@ -65,6 +75,7 @@ void deepscore::ComputeUnit::computeMessage() {
         }
 
         //compute code
+        DeepOpenScorerProcessRaw(dos, (const short *)slice->_val.c_str(), slice->_val.length()/2);
 
       } else if (slice->_flag == SliceFlag::FINISH) {
         if (!meet_message_begin) {
@@ -74,15 +85,15 @@ void deepscore::ComputeUnit::computeMessage() {
         }
 
         //compute code
+        DeepOpenScorerEnd(dos);
+        char const *txt = DeepOpenScorerJsonOutput(dos);
 
-        //LOG(DEBUG) << "finish to process message for key:" << slice._key;
         LOG(INFO) << "finish to process message for key:" << slice->_key;
 
 
         std::string message = "OK!";
         sendJsonResponse(slice->_host, slice->_port, slice->_key, message);
-        ////delete slice;
-        return;
+        break;
       } else if (slice->_flag == SliceFlag::BROKEN) {
         //part of the message will not show,maybe sender restart or send timeout,etc
         //what we will do is to drop the compute?
@@ -106,11 +117,13 @@ END:
       if (!warning.empty()) {
         LOG(WARNING) << warning;
       }
-      ////delete slice;
-      return;
+      break;
     }
-    //release resource
-    ////delete slice;
+  }
+
+  //release resource
+  if (dos != NULL) {
+    DeepOpenScorerDestroy(dos);
   }
 }
 
