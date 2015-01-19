@@ -1,5 +1,5 @@
 all:
-	g++ -o ../bin/deep_score_server \
+	g++ -g -o ../bin/deep_score_server \
 	deep_score_server.cpp \
 	stream_handler.cpp \
 	env_default.cpp \
@@ -17,8 +17,12 @@ all:
 deepscorer:
 	/opt/centos/devtoolset-1.1/root/usr/bin/g++ \
   -o ../bin/deep_score_server \
-  deep_score_server.cpp stream_handler.cpp env_default.cpp \
-  compute_unit_with_hook.cpp store.cpp fifo_map.cpp message.cpp \
+  deep_score_server.cpp \
+	stream_handler.cpp \
+	env_default.cpp \
+  compute_unit_with_hook.cpp \
+	store.cpp \
+	fifo_map.cpp message.cpp \
   callback.cpp http_client.cpp \
   gen-cpp/deep_score_service_constants.cpp \
   gen-cpp/DeepScorerService.cpp \

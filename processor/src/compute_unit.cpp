@@ -3,14 +3,6 @@
 #include <iostream>
 #include "include/compute_unit.h"
 
-void printTime() {
-    time_t now;
-    char dbgtime[26];
-    time(&now);
-    ctime_r(&now, dbgtime);
-    dbgtime[24] = '\0';
-    std::cout << "current time:" << dbgtime << std::endl;
-}
 
 void* deepscore::ComputeUnit::threadStatic(void *this_ptr) {
   ComputeUnit *compute_ptr = (ComputeUnit*)this_ptr;
@@ -49,10 +41,6 @@ void deepscore::ComputeUnit::computeMessage() {
       std::string err;
       std::string warning;
       const Slice* slice = _store->getSlice();
-      if (slice == NULL) {
-        LOG(FATAL) << "**NULL** slice happend!";
-        break;
-      }
 
       if(slice->_flag == SliceFlag::START) {
         //LOG(DEBUG) << "start to process message for key:" << slice._key;

@@ -25,10 +25,9 @@ public:
   const Slice* nextSlice();
 
 private:
-  bool isNextIterEnd(std::list<Message*>::const_iterator citr);
   std::list<Message*>::iterator nextIter(std::list<Message*>::iterator itr);
-  void waitForNewMessage();
-  void notifyNewMessage();
+  void waitForNewMessageInLock();
+  void notifyNewMessageInLock();
 
 private:
   bool _inited;
@@ -36,17 +35,19 @@ private:
   unsigned _map_size;
   std::tr1::unordered_map<std::string, std::list<Message*>::iterator>* _fifo_map;
   std::list<Message*> _messages;
+  const Message* _to_be_delete_msg;
   //used to hold last finished message
-  std::list<Message*>::iterator _prev_message_itr;
+  //std::list<Message*>::iterator _prev_message_itr;
   //used to hold the current reading message
   std::list<Message*>::iterator _current_message_itr;
 
   //protect _fifo_map,_messages,{_current,_prev}_message_itr
   pthread_mutex_t _fifo_mutex;
+  pthread_cond_t _next_message_cond;
 
   //protect _wait_for_next_message
-  pthread_mutex_t _next_message_mutex;
-  pthread_cond_t _next_message_cond;
+  //pthread_mutex_t _next_message_mutex;
+  //pthread_cond_t _next_message_cond;
 
 };
 

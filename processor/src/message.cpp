@@ -3,7 +3,7 @@
 #include "include/message.h"
 using namespace std;
 
-deepscore::Message::Message():_next_slice_seq(0), _wait_for_next_slice(true), _broken(false){
+deepscore::Message::Message(const string& key):_next_slice_seq(0), _wait_for_next_slice(true), _broken(false), _key(key){
   pthread_mutex_init(&_next_slice_mutex, NULL);
   pthread_cond_init(&_next_slice_cond, NULL);
   _prev_slice_iter = _next_slice_iter = _slices.end();
@@ -11,6 +11,10 @@ deepscore::Message::Message():_next_slice_seq(0), _wait_for_next_slice(true), _b
 
 deepscore::Message::~Message(){
   pthread_mutex_destroy(&_next_slice_mutex);
+  std::list<const Slice*>::const_iterator citr = _slices.begin();
+  for (; citr != _slices.end(); citr++) {
+    delete *citr;
+  }
   pthread_cond_destroy(&_next_slice_cond);
 }
 
@@ -56,6 +60,10 @@ const deepscore::Slice* deepscore::Message::nextSlice() {
     }
     pthread_mutex_unlock(&_next_slice_mutex);
   }
+}
+
+string deepscore::Message::getKey() {
+  return _key;
 }
 
 void deepscore::Message::waitForNextSliceInLock() {
