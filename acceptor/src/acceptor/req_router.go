@@ -32,11 +32,18 @@ func (rr *RequestRouter) SendMessage(sessionKey string, message []*deepscore.Dat
 		return err
 	}
 	defer pool.Put(c, false)
-	rv, err := c.(ThriftConn).Client.AddDataSliceStream(message)
+	rv, err := c.Client.AddDataSliceStream(message)
 	if err != nil {
-		fmt.Printf("send message failed!")
+		fmt.Println("send message failed!, reconnect.")
+		c.Reconnect()
+		rv, err := c.Client.AddDataSliceStream(message)
+		if err != nil {
+			fmt.Printf("retry failed...,give up now !, err:%v\n", err)
+		} else {
+			fmt.Println("retry succeed!, rv:%v\n", rv)
+		}
 		return err
 	}
-	fmt.Printf("send message ok, rv:%v", rv)
+	fmt.Printf("send message ok, rv:%v\n", rv)
 	return nil
 }

@@ -63,8 +63,6 @@ func sendMessage(sessionKey string, message *deepscore.DataSlice) error {
 	//r, err := client.AddDataSliceStream(messages)
 	if err != nil {
 		fmt.Printf("add messages failed,err:%s \n", err)
-	} else {
-		fmt.Printf("add messages ok")
 	}
 	return err
 }
@@ -78,16 +76,6 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
 	host := "127.0.0.1"
 	var port int32 = 8081
-
-	/*addr := "localhost:1463"
-	rich_client, err := NewDataStreamClient(addr)
-	if err != nil {
-		fmt.Printf("create thrift client failed!, err:%s\n", err)
-		return
-	}
-
-	defer rich_client.Transport.Close()
-	*/
 
 	var number int32
 	var slice_flag deepscore.SliceFlag = deepscore.SliceFlag_START
@@ -125,7 +113,6 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			if sessionKey != "" {
-				//sendMessage(rich_client.Client,
 				sendMessage(sessionKey,
 					&deepscore.DataSlice{Key: sessionKey, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: host, Port: port})
 			} else {
@@ -139,7 +126,6 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	//send last message
 	slice_flag = deepscore.SliceFlag_FINISH
 	if sessionKey != "" {
-		//sendMessage(rich_client.Client,
 		sendMessage(sessionKey,
 			&deepscore.DataSlice{Key: sessionKey, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
 

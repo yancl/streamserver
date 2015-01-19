@@ -10,12 +10,11 @@ import (
 )
 
 func main() {
-	log.Printf("begin to run!\n")
 	config.LoadConfig()
 
 	//init global notify map
-	acceptor.KEY_CHANNEL_MAPPER = make(map[string]chan string)
-	acceptor.KEY_CHANNEL_MUTEX = &sync.Mutex{}
+	acceptor.KeyChannelMapper = make(map[string]chan string)
+	acceptor.KeyChannelMutex = &sync.Mutex{}
 
 	//init request router
 	computeCells := make([]acceptor.ComputeCell, 0, 2)

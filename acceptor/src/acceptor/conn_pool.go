@@ -23,14 +23,14 @@ type ConnPool struct {
 
 	// Dial is an application supplied function for creating and configuring a
 	// connection
-	Dial func(addr string) (Conn, error)
+	Dial func(addr string) (*ThriftConn, error)
 
 	// TestOnBorrow is an optional application supplied function for checking
 	// the health of an idle connection before the connection is used again by
 	// the application. Argument t is the time that the connection was returned
 	// to the pool. If the function returns an error, then the connection is
 	// closed.
-	TestOnBorrow func(c Conn, t time.Time) error
+	TestOnBorrow func(c *ThriftConn, t time.Time) error
 
 	//the pool only for the addr
 	Addr string
@@ -62,13 +62,13 @@ type ConnPool struct {
 }
 
 type idleConn struct {
-	c Conn
+	c *ThriftConn
 	t time.Time
 }
 
 // NewConnPool creates a new pool. This function is deprecated. Applications should
 // initialize the *ConnPool fields directly as shown in example.
-func NewConnPool(newFn func(addr string) (Conn, error), addr string, maxIdle int, maxActive int, wait bool) *ConnPool {
+func NewConnPool(newFn func(addr string) (*ThriftConn, error), addr string, maxIdle int, maxActive int, wait bool) *ConnPool {
 	return &ConnPool{Dial: newFn, Addr: addr, MaxIdle: maxIdle, MaxActive: maxActive, Wait: wait}
 }
 
@@ -77,7 +77,7 @@ func NewConnPool(newFn func(addr string) (Conn, error), addr string, maxIdle int
 // error handling to the first use of the connection. If there is an error
 // getting an underlying connection, then the connection Err, Do, Send, Flush
 // and Receive methods return that error.
-func (p *ConnPool) Get() (Conn, error) {
+func (p *ConnPool) Get() (*ThriftConn, error) {
 	c, err := p.get()
 	if err != nil {
 		//return errorConnection{err}
@@ -123,7 +123,7 @@ func (p *ConnPool) release() {
 
 // get prunes stale connections and returns a connection from the idle list or
 // creates a new connection.
-func (p *ConnPool) get() (Conn, error) {
+func (p *ConnPool) get() (*ThriftConn, error) {
 	p.mu.Lock()
 
 	// Prune stale connections.
@@ -202,7 +202,7 @@ func (p *ConnPool) get() (Conn, error) {
 	}
 }
 
-func (p *ConnPool) Put(c Conn, forceClose bool) error {
+func (p *ConnPool) Put(c *ThriftConn, forceClose bool) error {
 	//err := c.Err()
 	p.mu.Lock()
 	//if !p.closed && err == nil && !forceClose {
@@ -228,6 +228,7 @@ func (p *ConnPool) Put(c Conn, forceClose bool) error {
 	return c.Close()
 }
 
+/*
 type pooledConnection struct {
 	p     *ConnPool
 	c     Conn
@@ -235,3 +236,4 @@ type pooledConnection struct {
 }
 
 type errorConnection struct{ err error }
+*/

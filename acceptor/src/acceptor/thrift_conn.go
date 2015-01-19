@@ -7,16 +7,15 @@ import (
 )
 
 type ThriftConn struct {
-	Conn
 	Client    *deepscore.DeepScorerServiceClient
 	Transport thrift.TTransport
 	addr      string
 	connected bool
 }
 
-func NewThriftConn(addr string) (Conn, error) {
-	fmt.Printf("create new connect to addr:%s", addr)
-	conn := ThriftConn{addr: addr, connected: false}
+//func NewThriftConn(addr string) (Conn, error) {
+func NewThriftConn(addr string) (*ThriftConn, error) {
+	conn := &ThriftConn{addr: addr, connected: false}
 	err := conn.Connect()
 	if err != nil {
 		return conn, err
@@ -24,7 +23,7 @@ func NewThriftConn(addr string) (Conn, error) {
 	return conn, nil
 }
 
-func (thriftConn ThriftConn) Connect() error {
+func (thriftConn *ThriftConn) Connect() error {
 	if thriftConn.connected {
 		fmt.Println("connection already connected!")
 		return nil
@@ -51,7 +50,7 @@ func (thriftConn ThriftConn) Connect() error {
 	return nil
 }
 
-func (thriftConn ThriftConn) Reconnect() error {
+func (thriftConn *ThriftConn) Reconnect() error {
 	err := thriftConn.Close()
 	if err != nil {
 		return err
@@ -60,7 +59,7 @@ func (thriftConn ThriftConn) Reconnect() error {
 	return err
 }
 
-func (thriftConn ThriftConn) Close() error {
+func (thriftConn *ThriftConn) Close() error {
 	thriftConn.Transport.Close()
 	thriftConn.connected = false
 	return nil
