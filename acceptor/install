@@ -7,11 +7,11 @@ fi
 
 CURDIR=`pwd`
 OLDGOPATH="$GOPATH"
-export GOPATH="$CURDIR":src/gen-go/
+export GOPATH="$CURDIR":/home/yancl/work/streamserver/acceptor/src/gen-go/
 
 gofmt -w src
 
-go install acceptor
+go install main
 
 export GOPATH="$OLDGOPATH"
 
