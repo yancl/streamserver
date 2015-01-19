@@ -23,11 +23,12 @@ void deepscore::Callback::run() {
 
 void deepscore::Callback::callback(const CallbackMsg& msg) {
   std::string url = makeUrl(msg._host, msg._port, _callback_url_prefix);
-  url += "?session_key="+ msg._key + "&message=" + msg._msg;
+  std::string param = "&session_key="+ msg._key + "&message=" + msg._msg;
 
   CHttpClient http_client;
   std::string rsp;
-  int rv = http_client.Get(url, rsp); 
+  int rv = http_client.Post(url, param, rsp);
+  //int rv = http_client.Get(url + param, rsp); 
   if (rv != 0) {
     LOG(ERROR) << "callback failed for key:" << msg._key << "rv:" << rv;
     return;

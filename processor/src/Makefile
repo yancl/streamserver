@@ -9,6 +9,7 @@ all:
 	message.cpp \
 	callback.cpp \
 	http_client.cpp \
+	url_coder.cpp \
 	gen-cpp/deep_score_service_constants.cpp \
 	gen-cpp/DeepScorerService.cpp \
 	gen-cpp/deep_score_service_types.cpp \
@@ -22,8 +23,11 @@ deepscorer:
 	env_default.cpp \
   compute_unit_with_hook.cpp \
 	store.cpp \
-	fifo_map.cpp message.cpp \
-  callback.cpp http_client.cpp \
+	fifo_map.cpp \
+	message.cpp \
+  callback.cpp \
+	http_client.cpp \
+	url_coder.cpp \
   gen-cpp/deep_score_service_constants.cpp \
   gen-cpp/DeepScorerService.cpp \
   gen-cpp/deep_score_service_types.cpp \
