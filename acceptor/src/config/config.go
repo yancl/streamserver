@@ -6,13 +6,14 @@ import (
 )
 
 type Config struct {
-	ServerServeAddr    string
-	ServerCallbackAddr string
-	ChunkSize          int
-	NotifierSize       int
-	NotifierWaitTime   int
-	ComputeCellAddrs   []string
-	ConnPool           struct {
+	ServerServeAddr          string
+	ServerWebSocketServeAddr string
+	ServerCallbackAddr       string
+	ChunkSize                int
+	NotifierSize             int
+	NotifierWaitTime         int
+	ComputeCellAddrs         []string
+	ConnPool                 struct {
 		MaxActive int
 		MaxIdle   int
 		Wait      bool

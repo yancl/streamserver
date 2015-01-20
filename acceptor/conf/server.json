@@ -1,6 +1,7 @@
 {
   "ServerServeAddr":"127.0.0.1:8081",
-  "ServerCallbackAddr":"127.0.0.1:8082",
+  "ServerWebSocketServeAddr":"127.0.0.1:8082",
+  "ServerCallbackAddr":"127.0.0.1:8083",
   "ChunkSize":4096,
   "NotifierSize":10000,
   "NotifierWaitTime":30,

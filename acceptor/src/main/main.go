@@ -5,6 +5,7 @@ import (
 	"config"
 	"flag"
 	"fmt"
+	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
 	"strconv"
@@ -64,6 +65,9 @@ func main() {
 	ClientReqServeMux.HandleFunc("/upload_all", acceptor.UploadAll)
 	ClientReqServeMux.HandleFunc("/upload", acceptor.UploadStream)
 
+	ClientWsReqServeMux := http.NewServeMux()
+	ClientWsReqServeMux.Handle("/ws/upload", websocket.Handler(acceptor.HandleVoidStream))
+
 	CallbackReqServeMux := http.NewServeMux()
 	CallbackReqServeMux.HandleFunc("/notify", acceptor.Notify)
 
@@ -71,6 +75,12 @@ func main() {
 	go func() {
 		fmt.Printf("start acceptor callback server at [%s]!\n", conf.ServerCallbackAddr)
 		log.Fatal(http.ListenAndServe(conf.ServerCallbackAddr, CallbackReqServeMux))
+	}()
+
+	//start websocket server
+	go func() {
+		fmt.Printf("start acceptor websocket server at [%s]!\n", conf.ServerWebSocketServeAddr)
+		log.Fatal(http.ListenAndServe(conf.ServerWebSocketServeAddr, ClientWsReqServeMux))
 	}()
 
 	//start serve server last
