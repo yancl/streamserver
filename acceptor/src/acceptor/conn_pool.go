@@ -33,23 +33,23 @@ type ConnPool struct {
 	TestOnBorrow func(c *ThriftConn, t time.Time) error
 
 	//the pool only for the addr
-	Addr string
+	addr string
 
 	// Maximum number of connections allocated by the pool at a given time.
 	// When zero, there is no limit on the number of connections in the pool.
-	MaxActive int
+	maxActive int
 
 	// Maximum number of idle connections in the pool.
-	MaxIdle int
+	maxIdle int
 
 	// Close connections after remaining idle for this duration. If the value
 	// is zero, then idle connections are not closed. Applications should set
 	// the timeout to a value less than the server's timeout.
 	IdleTimeout time.Duration
 
-	// If Wait is true and the pool is at the MaxIdle limit, then Get() waits
+	// If wait is true and the pool is at the maxIdle limit, then Get() waits
 	// for a connection to be returned to the pool before returning.
-	Wait bool
+	wait bool
 
 	// mu protects fields defined below.
 	mu     sync.Mutex
@@ -69,7 +69,7 @@ type idleConn struct {
 // NewConnPool creates a new pool. This function is deprecated. Applications should
 // initialize the *ConnPool fields directly as shown in example.
 func NewConnPool(newFn func(addr string) (*ThriftConn, error), addr string, maxActive int, maxIdle int, wait bool) *ConnPool {
-	return &ConnPool{Dial: newFn, Addr: addr, MaxActive: maxActive, MaxIdle: maxIdle, Wait: wait}
+	return &ConnPool{Dial: newFn, addr: addr, maxActive: maxActive, maxIdle: maxIdle, wait: wait}
 }
 
 // Get gets a connection. The application must close the returned connection.
@@ -176,11 +176,11 @@ func (p *ConnPool) get() (*ThriftConn, error) {
 
 		// Dial new connection if under limit.
 
-		if p.MaxActive == 0 || p.active < p.MaxActive {
+		if p.maxActive == 0 || p.active < p.maxActive {
 			dial := p.Dial
 			p.active += 1
 			p.mu.Unlock()
-			c, err := dial(p.Addr)
+			c, err := dial(p.addr)
 			if err != nil {
 				p.mu.Lock()
 				p.release()
@@ -190,7 +190,7 @@ func (p *ConnPool) get() (*ThriftConn, error) {
 			return c, err
 		}
 
-		if !p.Wait {
+		if !p.wait {
 			p.mu.Unlock()
 			return nil, ErrConnPoolExhausted
 		}
@@ -203,12 +203,10 @@ func (p *ConnPool) get() (*ThriftConn, error) {
 }
 
 func (p *ConnPool) Put(c *ThriftConn, forceClose bool) error {
-	//err := c.Err()
 	p.mu.Lock()
-	//if !p.closed && err == nil && !forceClose {
 	if !p.closed && !forceClose {
 		p.idle.PushFront(idleConn{t: nowFunc(), c: c})
-		if p.idle.Len() > p.MaxIdle {
+		if p.idle.Len() > p.maxIdle {
 			c = p.idle.Remove(p.idle.Back()).(idleConn).c
 		} else {
 			c = nil
@@ -227,13 +225,3 @@ func (p *ConnPool) Put(c *ThriftConn, forceClose bool) error {
 	p.mu.Unlock()
 	return c.Close()
 }
-
-/*
-type pooledConnection struct {
-	p     *ConnPool
-	c     Conn
-	state int
-}
-
-type errorConnection struct{ err error }
-*/

@@ -8,7 +8,9 @@ import (
 type Config struct {
 	ServerServeAddr    string
 	ServerCallbackAddr string
-	MapSize            int
+	ChunkSize          int
+	NotifierSize       int
+	NotifierWaitTime   int
 	ComputeCellAddrs   []string
 	ConnPool           struct {
 		MaxActive int

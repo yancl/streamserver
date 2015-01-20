@@ -11,7 +11,15 @@ import (
 	"strings"
 )
 
+func getHostPort(addr string) (string, int32, error) {
+	hostport := strings.Split(addr, ":")
+	host := hostport[0]
+	port, err := strconv.Atoi(hostport[1])
+	return host, int32(port), err
+}
+
 func main() {
+	//parser config
 	filenamePtr := flag.String("f", "", "conf file name for the server")
 	flag.Parse()
 
@@ -22,28 +30,35 @@ func main() {
 	}
 
 	//init global notify map
-	acceptor.InitGlobalMap(conf.MapSize)
+	acceptor.InitNotifier(conf.NotifierSize, conf.NotifierWaitTime)
 
-	var (
-		computeCellAddrs = conf.ComputeCellAddrs
-		computeCellNum   = len(computeCellAddrs)
-	)
+	host, port, err := getHostPort(conf.ServerCallbackAddr)
+	if err != nil {
+		fmt.Printf("parse host port:%s failed, err:%v\n", conf.ServerCallbackAddr, err)
+		return
+	}
+	acceptor.InitHandlerParams(conf.ChunkSize, host, port)
 
-	computeCells := make([]acceptor.ComputeCell, 0, computeCellNum)
-	for _, addr := range computeCellAddrs {
+	//init compute cells &request router
+	//acceptor.ReqRouter = &acceptor.RequestRouter{ComputeCellNum: uint32(computeCellNum), ComputeCells: computeCells}
+	acceptor.ReqRouter = &acceptor.RequestRouter{}
+	/*
+		var (
+			computeCellAddrs = conf.ComputeCellAddrs
+			computeCellNum   = len(computeCellAddrs)
+		)*/
+
+	//computeCells := make([]acceptor.ComputeCell, 0, computeCellNum)
+	for _, addr := range conf.ComputeCellAddrs {
 		connPool := acceptor.NewConnPool(acceptor.NewThriftConn, addr, conf.ConnPool.MaxActive, conf.ConnPool.MaxIdle, conf.ConnPool.Wait)
-		hostport := strings.Split(addr, ":")
-		host := hostport[0]
-		port, err := strconv.Atoi(hostport[1])
+		host, port, err := getHostPort(addr)
 		if err != nil {
-			fmt.Printf("parse host port:%s failed, err:%v\n", hostport, err)
+			fmt.Printf("parse host port:%s failed, err:%v\n", addr, err)
 			return
 		}
-		computeCells = append(computeCells, acceptor.ComputeCell{Host: host, Port: port, Pool: connPool})
+		acceptor.ReqRouter.AddComputeCell(host, port, connPool)
+		//computeCells = append(computeCells, acceptor.ComputeCell{Host: host, Port: port, Pool: connPool})
 	}
-
-	//init request router
-	acceptor.ReqRouter = &acceptor.RequestRouter{ComputeCellNum: uint32(computeCellNum), ComputeCells: computeCells}
 
 	//dispatch requests to different servers
 	ClientReqServeMux := http.NewServeMux()
@@ -53,11 +68,13 @@ func main() {
 	CallbackReqServeMux := http.NewServeMux()
 	CallbackReqServeMux.HandleFunc("/notify", acceptor.Notify)
 
+	//start callback server first
 	go func() {
 		fmt.Printf("start acceptor callback server at [%s]!\n", conf.ServerCallbackAddr)
 		log.Fatal(http.ListenAndServe(conf.ServerCallbackAddr, CallbackReqServeMux))
 	}()
 
+	//start serve server last
 	fmt.Printf("start acceptor serve server at [%s]!\n", conf.ServerServeAddr)
 	log.Fatal(http.ListenAndServe(conf.ServerServeAddr, ClientReqServeMux))
 }

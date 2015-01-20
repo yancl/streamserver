@@ -13,7 +13,6 @@ type ThriftConn struct {
 	connected bool
 }
 
-//func NewThriftConn(addr string) (Conn, error) {
 func NewThriftConn(addr string) (*ThriftConn, error) {
 	conn := &ThriftConn{addr: addr, connected: false}
 	err := conn.Connect()

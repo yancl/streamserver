@@ -11,72 +11,35 @@ import (
 	"time"
 )
 
-var ReqRouter *RequestRouter
+var chunkSize int
+var (
+	host string
+	port int32
+)
 
-//stream part begin
-const CHUNK_SIZE = 4 * 1024
-
-func waitForNotify(key string) string {
-	receiver := make(chan string, 1)
-	if GlobalMap.Add(key, receiver) == false {
-		return fmt.Sprintf("key already in map, key:%s", key)
-	}
-
-	//release resource
-	defer GlobalMap.Delete(key)
-
-	var result string
-
-	select {
-	case msg := <-receiver:
-		result = msg
-	case <-time.After(time.Second * 60 * 5):
-		result = "Timeout"
-	}
-	return result
+func InitHandlerParams(chunkSize int, host string, port int32) {
+	chunkSize = chunkSize
+	host = host
+	port = port
 }
 
-func sendNotify(key string, message string) bool {
-	receiver, exsit := GlobalMap.Get(key)
-	if exsit {
-		// in normal scene it will block sender
-		// but for robust, add it to select block
-		select {
-		case receiver <- message:
-		case <-time.After(time.Second * 1):
-		}
-		return true
-	}
-	fmt.Printf("send message failed for key:%s \n", key)
-	return false
-}
-
-//func sendMessage(client *deepscore.DeepScorerServiceClient, sessionKey string, message *deepscore.DataSlice) error {
 func sendMessage(sessionKey string, message *deepscore.DataSlice) error {
 	//compose messages
+	length := 0
 	capacity := 1
-	messages := make([]*deepscore.DataSlice, 0, capacity)
+	messages := make([]*deepscore.DataSlice, length, capacity)
 	messages = append(messages, message)
-
-	err := ReqRouter.SendMessage(sessionKey, messages)
-	//send messages
-	//r, err := client.AddDataSliceStream(messages)
-	if err != nil {
-		fmt.Printf("add messages failed,err:%s \n", err)
-	}
-	return err
+	return ReqRouter.SendMessage(sessionKey, messages)
 }
 
 func UploadStream(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+
 	mr, err := r.MultipartReader()
 	if err != nil {
 		fmt.Printf("make multipart reader failed!\n")
 		return
 	}
-
-	host := "127.0.0.1"
-	var port int32 = 8081
 
 	var number int32
 	var slice_flag deepscore.SliceFlag = deepscore.SliceFlag_START
@@ -94,7 +57,7 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
 		//form-key-value
 		if filename == "" {
-			buffer := make([]byte, CHUNK_SIZE)
+			buffer := make([]byte, chunkSize)
 			size, err := p.Read(buffer)
 			if err == io.EOF {
 				fmt.Printf("read eof on key:%s\n, break it now.", formname)
@@ -108,48 +71,66 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
 		//form-file
 		for {
-			buffer := make([]byte, CHUNK_SIZE)
+			buffer := make([]byte, chunkSize)
 			size, err := p.Read(buffer)
 			if err == io.EOF {
 				break
 			}
 			if sessionKey != "" {
-				sendMessage(sessionKey,
+				err := sendMessage(sessionKey,
 					&deepscore.DataSlice{Key: sessionKey, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: host, Port: port})
+				if err != nil {
+					fmt.Printf("send message failed for key:%s, err:%v\n", sessionKey, err)
+					return
+				}
 			} else {
-				fmt.Println("session key is null, will not send message!")
+				fmt.Println("session key is EMPTY, will not send message!")
 			}
 			slice_flag = deepscore.SliceFlag_MIDDLE
 			number += 1
 		}
 	}
 
-	end := time.Now()
-	fmt.Printf("cost time is:%v\n", end.Sub(start))
+	if sessionKey == "" {
+		fmt.Println("session key is null, will not send message!")
+		return
+	}
+
 	//send last message
 	slice_flag = deepscore.SliceFlag_FINISH
-	if sessionKey != "" {
-		sendMessage(sessionKey,
-			&deepscore.DataSlice{Key: sessionKey, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
+	err = sendMessage(sessionKey,
+		&deepscore.DataSlice{Key: sessionKey, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
+	sendOverEnd := time.Now()
+	fmt.Printf("send message cost time:%v\n", sendOverEnd.Sub(start))
 
-		result := waitForNotify(sessionKey)
-		end2 := time.Now()
-		fmt.Printf("total cost time is:%v\n", end2.Sub(start))
-		fmt.Fprintf(w, "result is:%s \n", result)
+	result, err := WaitForNotify(sessionKey)
+	responseEnd := time.Now()
+	fmt.Printf("total time include response is:%v\n", responseEnd.Sub(start))
+	if err != nil {
+		fmt.Fprintf(w, "%s\n", result)
 	} else {
-		fmt.Println("session key is null, will not send message!")
+		fmt.Fprintf(w, "{}")
+		fmt.Println("%v", err)
 	}
 }
 
 func Notify(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("receive message!")
-	var sessionKey string
-	var message string
+	var (
+		sessionKey string
+		message    string
+	)
 
 	if r.Method == "POST" {
 		sessionKey = r.PostFormValue("session_key")
 		message = r.PostFormValue("message")
+	} else {
+		errMsg := fmt.Sprintf("request method is not POST, it is:%s", r.Method)
+		fmt.Fprintln(w, errMsg)
+		fmt.Println(errMsg)
+		return
 	}
+
+	fmt.Printf("receive notify from key:%s!", sessionKey)
 
 	/*
 		if r.Method == "GET" {
@@ -165,17 +146,22 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		}*/
 
 	if sessionKey == "" || message == "" {
-		fmt.Printf("receive message sessionKey:%s or message:%s part is empty!\n", sessionKey, message)
+		errMsg := fmt.Sprintf("receive message sessionKey:%s or message:%s part is empty!", sessionKey, message)
+		fmt.Fprintln(w, errMsg)
+		fmt.Println(errMsg)
 		return
 	}
 
-	fmt.Printf("sessionKey:%s,message:%s\n", sessionKey, message)
-	result := sendNotify(sessionKey, message)
-	if result == false {
-		fmt.Fprintf(w, "process message failed for key:%s!\n", sessionKey)
+	err := SendNotify(sessionKey, message)
+	if err != nil {
+		errMsg := fmt.Sprintf("process message failed for key:%s!, err:%v", sessionKey, err)
+		fmt.Fprintln(w, errMsg)
+		fmt.Println(errMsg)
 		return
 	}
-	fmt.Fprintf(w, "process message ok for key:%s!\n", sessionKey)
+	errMsg := fmt.Sprintf("process message ok for key:%s!\n", sessionKey)
+	fmt.Fprintln(w, errMsg)
+	fmt.Println(errMsg)
 }
 
 // 1MB, more data will write to disk file tempory
@@ -195,7 +181,7 @@ func UploadAll(w http.ResponseWriter, r *http.Request) {
 	for _, fileHeaders := range r.MultipartForm.File {
 		for _, fileHeader := range fileHeaders {
 			file, _ := fileHeader.Open()
-			path := fmt.Sprintf("downloads/%s", fileHeader.Filename)
+			path := fmt.Sprintf("%s", fileHeader.Filename)
 			buf, _ := ioutil.ReadAll(file)
 			ioutil.WriteFile(path, buf, os.ModePerm)
 		}
