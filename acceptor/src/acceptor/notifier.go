@@ -77,7 +77,7 @@ func WaitForNotify(key string) (string, error) {
 		return "", errors.New(fmt.Sprintf("wait for key:%s failed, [NOT FOUND]\n", key))
 	}
 
-	defer notifier.del(key)
+	//defer notifier.del(key)
 
 	select {
 	case msg := <-receiver:

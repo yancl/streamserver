@@ -6,41 +6,15 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-const (
-	Start  = 0
-	Middle = 1
-	Finish = 2
-	Broken = 10
-)
-
-type AuthRequest struct {
-	UserId string `json:"userid"`
-	Passwd string `json:"passwd"`
-}
-
-type DataRequest struct {
-	Flag int    `json:"flag"`
-	Data []byte `json."data"`
-}
-
-type Response struct {
-	Code int    `json:"code"`
-	Msg  string `json:"msg"`
-	Data []byte `json:"data"`
-}
-
 func sendResponse(ws *websocket.Conn, code int, msg string, data string) {
-	//defer ws.Close()
-
 	var rsp = Response{Code: code, Msg: msg, Data: []byte(data)}
-	fmt.Printf("data:%s\n", rsp.Data)
 	if err := websocket.JSON.Send(ws, rsp); err != nil {
 		fmt.Printf("send response failed, err:%v\n", err)
 		return
 	}
 }
 
-func HandleVoidStream(ws *websocket.Conn) {
+func HandleVoiceStream(ws *websocket.Conn) {
 	//auth
 	code := 0
 	msg := ""
@@ -65,6 +39,8 @@ func HandleVoidStream(ws *websocket.Conn) {
 		failed, code, msg = true, -1, "register key failed"
 		goto end
 	}
+
+	defer UnRegisterNotify(sessionKey)
 
 	//receive data
 	for {
@@ -92,7 +68,7 @@ func HandleVoidStream(ws *websocket.Conn) {
 		seq += 1
 
 		if req.Flag == Finish || req.Flag == Broken {
-			fmt.Printf("meet end message\n")
+			//fmt.Printf("meet end message\n")
 			break
 		}
 	}

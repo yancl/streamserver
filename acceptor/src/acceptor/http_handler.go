@@ -2,6 +2,7 @@ package acceptor
 
 import (
 	"deepscore"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -21,17 +22,21 @@ func InitHttpHandlerParams(chunkSize int) {
 
 func UploadStream(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+	var sendOverEnd time.Time
+	var responseEnd time.Time
+
+	rsp := Response{Code: 0, Msg: ""}
+	var number int32
+	var slice_flag deepscore.SliceFlag = deepscore.SliceFlag_START
+	var sessionKey string
+	var result string
+	var err error
 
 	mr, err := r.MultipartReader()
 	if err != nil {
-		fmt.Printf("make multipart reader failed!\n")
-		return
+		rsp.Code, rsp.Msg = -1, fmt.Sprintf("make multipart reader failed,err:%v!", err)
+		goto end
 	}
-
-	var number int32
-	var slice_flag deepscore.SliceFlag = deepscore.SliceFlag_START
-
-	var sessionKey string
 
 	for {
 		p, err := mr.NextPart()
@@ -39,24 +44,25 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		formname := p.FormName()
-		filename := p.FileName()
+		formName := p.FormName()
+		fileName := p.FileName()
 
 		//form-key-value
-		if filename == "" {
+		if fileName == "" {
 			buffer := make([]byte, processChunkSize)
 			size, err := p.Read(buffer)
 			if err == io.EOF {
-				fmt.Printf("read eof on key:%s\n, break it now.", formname)
-				return
+				rsp.Code, rsp.Msg = -1, fmt.Sprintf("read eof on key:%s\n, break it now.", formName)
+				goto end
 			}
-			if formname == "session_key" {
+			if formName == "session_key" {
 				sessionKey = string(buffer[0:size])
-
+				//register message
 				if err := RegisterNotify(sessionKey); err != nil {
-					fmt.Printf("register notify failed, err:%v\n", err)
-					return
+					rsp.Code, rsp.Msg = -1, fmt.Sprintf("register notify failed, err:%v\n", err)
+					goto end
 				}
+				defer UnRegisterNotify(sessionKey)
 			}
 			continue
 		}
@@ -69,15 +75,14 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			if sessionKey != "" {
-
 				err := SendMessage(sessionKey, &Message{seq: number, flag: slice_flag, data: buffer[0:size]})
 				if err != nil {
-					fmt.Printf("send message failed for key:%s, err:%v\n", sessionKey, err)
-					return
+					rsp.Code, rsp.Msg = -1, fmt.Sprintf("send message failed for key:%s, err:%v\n", sessionKey, err)
+					goto end
 				}
 			} else {
-				fmt.Println("session key is EMPTY, will not send message!")
-				return
+				rsp.Code, rsp.Msg = -1, fmt.Sprintf("session key is EMPTY, will not send message!")
+				goto end
 			}
 			slice_flag = deepscore.SliceFlag_MIDDLE
 			number += 1
@@ -85,25 +90,36 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if sessionKey == "" {
-		fmt.Println("session key is EMPTY, will not send message!")
-		return
+		rsp.Code, rsp.Msg = -1, fmt.Sprintf("session key is EMPTY, will not send message!")
+		goto end
 	}
 
 	//send last message
 	slice_flag = deepscore.SliceFlag_FINISH
-	err = SendMessage(sessionKey, &Message{seq: number, flag: slice_flag, data: nil})
-	sendOverEnd := time.Now()
+	if err = SendMessage(sessionKey, &Message{seq: number, flag: slice_flag, data: nil}); err != nil {
+		rsp.Code, rsp.Msg = -1, fmt.Sprintf("send message failed for key:%s, err:%v\n", sessionKey, err)
+		goto end
+	}
+	sendOverEnd = time.Now()
 	fmt.Printf("send message cost time:%v\n", sendOverEnd.Sub(start))
 
-	result, err := WaitForNotify(sessionKey)
-	responseEnd := time.Now()
-	fmt.Printf("total time include response is:%v\n", responseEnd.Sub(start))
-	if err != nil {
-		fmt.Fprintf(w, "{}")
-		fmt.Printf("%v", err)
-	} else {
-		fmt.Fprintf(w, "%s\n", result)
+	if result, err = WaitForNotify(sessionKey); err != nil {
+		rsp.Code, rsp.Msg = -1, fmt.Sprintf("wait message failed for key:%s, err:%v\n", sessionKey, err)
+		goto end
 	}
+	rsp.Data = []byte(result)
+
+end:
+	var data []byte
+	data, err = json.Marshal(rsp)
+	if err != nil {
+		data = []byte("{code:-100}")
+		fmt.Printf("xxx")
+	}
+	fmt.Fprintf(w, string(data))
+	fmt.Println(string(data))
+	responseEnd = time.Now()
+	fmt.Printf("total time include response is:%v\n", responseEnd.Sub(start))
 }
 
 func Notify(w http.ResponseWriter, r *http.Request) {

@@ -1,9 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"fmt"
 	"golang.org/x/net/websocket"
+	"io"
 	"log"
+	"os"
 )
 
 const (
@@ -29,7 +33,27 @@ type Response struct {
 	Data []byte `json:"data"`
 }
 
+func printUsage() {
+	fmt.Printf("Usage:\n./testws -f filename\n")
+}
+
+var chunkSize = 4096
+
 func main() {
+	filenamePtr := flag.String("f", "", "file name to compute")
+	flag.Parse()
+
+	if *filenamePtr == "" {
+		printUsage()
+		return
+	}
+
+	f, err := os.Open(*filenamePtr)
+	if err != nil {
+		fmt.Printf("open file:%s failed!,err:%s\n", *filenamePtr, err)
+		return
+	}
+
 	origin := "http://localhost/"
 	url := "ws://localhost:8082/ws/upload"
 	ws, err := websocket.Dial(url, "", origin)
@@ -43,14 +67,31 @@ func main() {
 		log.Fatal(err)
 	}
 
-	req := DataRequest{Flag: Start, Data: []byte("this is datax")}
+	firstMessage := true
+	flag := Start
 
-	if err := websocket.JSON.Send(ws, req); err != nil {
-		log.Fatal(err)
+	for {
+		var data = make([]byte, chunkSize)
+		_, err := f.Read(data)
+		if err == io.EOF {
+			break
+		}
+
+		req := DataRequest{Flag: flag, Data: data}
+		if err := websocket.JSON.Send(ws, req); err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		if firstMessage {
+			firstMessage = false
+			flag = Middle
+		}
 	}
 
-	req = DataRequest{Flag: Finish, Data: []byte("this is datay")}
-
+	//send end slice
+	flag = Finish
+	req := DataRequest{Flag: flag, Data: nil}
 	if err := websocket.JSON.Send(ws, req); err != nil {
 		log.Fatal(err)
 	}
@@ -59,5 +100,11 @@ func main() {
 	if err := websocket.JSON.Receive(ws, &rsp); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Received: code:%d, msg:%s, data:%s.\n", rsp.Code, rsp.Msg, rsp.Data)
+
+	if data, err := json.Marshal(rsp); err != nil {
+		fmt.Printf("unmarshal response failed, err:%v\n", err)
+	} else {
+		fmt.Println(string(data))
+	}
+
 }

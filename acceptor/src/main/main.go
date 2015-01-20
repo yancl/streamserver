@@ -67,7 +67,7 @@ func main() {
 	ClientReqServeMux.HandleFunc("/upload", acceptor.UploadStream)
 
 	ClientWsReqServeMux := http.NewServeMux()
-	ClientWsReqServeMux.Handle("/ws/upload", websocket.Handler(acceptor.HandleVoidStream))
+	ClientWsReqServeMux.Handle("/ws/upload", websocket.Handler(acceptor.HandleVoiceStream))
 
 	CallbackReqServeMux := http.NewServeMux()
 	CallbackReqServeMux.HandleFunc("/notify", acceptor.Notify)
@@ -85,6 +85,6 @@ func main() {
 	}()
 
 	//start serve server last
-	fmt.Printf("start acceptor serve server at [%s]!\n", conf.ServerServeAddr)
+	fmt.Printf("start acceptor http server at [%s]!\n", conf.ServerServeAddr)
 	log.Fatal(http.ListenAndServe(conf.ServerServeAddr, ClientReqServeMux))
 }
