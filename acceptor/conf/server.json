@@ -4,7 +4,7 @@
   "ChunkSize":4096,
   "NotifierSize":10000,
   "NotifierWaitTime":30,
-  "ComputeCellAddrs":["127.0.0.1:1463"],
+  "ComputeCellAddrs":["127.0.0.1:1463","127.0.0.1:1463"],
   "ConnPool": {
     "MaxActive": 10,
     "MaxIdle": 10,

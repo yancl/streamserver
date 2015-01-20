@@ -11,16 +11,16 @@ import (
 	"time"
 )
 
-var chunkSize int
 var (
-	host string
-	port int32
+	processChunkSize int
+	callbackHost     string
+	callbackPort     int32
 )
 
 func InitHandlerParams(chunkSize int, host string, port int32) {
-	chunkSize = chunkSize
-	host = host
-	port = port
+	processChunkSize = chunkSize
+	callbackHost = host
+	callbackPort = port
 }
 
 func sendMessage(sessionKey string, message *deepscore.DataSlice) error {
@@ -57,7 +57,7 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
 		//form-key-value
 		if filename == "" {
-			buffer := make([]byte, chunkSize)
+			buffer := make([]byte, processChunkSize)
 			size, err := p.Read(buffer)
 			if err == io.EOF {
 				fmt.Printf("read eof on key:%s\n, break it now.", formname)
@@ -71,20 +71,21 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
 		//form-file
 		for {
-			buffer := make([]byte, chunkSize)
+			buffer := make([]byte, processChunkSize)
 			size, err := p.Read(buffer)
 			if err == io.EOF {
 				break
 			}
 			if sessionKey != "" {
 				err := sendMessage(sessionKey,
-					&deepscore.DataSlice{Key: sessionKey, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: host, Port: port})
+					&deepscore.DataSlice{Key: sessionKey, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: callbackHost, Port: callbackPort})
 				if err != nil {
 					fmt.Printf("send message failed for key:%s, err:%v\n", sessionKey, err)
 					return
 				}
 			} else {
 				fmt.Println("session key is EMPTY, will not send message!")
+				return
 			}
 			slice_flag = deepscore.SliceFlag_MIDDLE
 			number += 1
@@ -92,14 +93,14 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if sessionKey == "" {
-		fmt.Println("session key is null, will not send message!")
+		fmt.Println("session key is EMPTY, will not send message!")
 		return
 	}
 
 	//send last message
 	slice_flag = deepscore.SliceFlag_FINISH
 	err = sendMessage(sessionKey,
-		&deepscore.DataSlice{Key: sessionKey, Val: nil, Number: number, Flag: slice_flag, Host: host, Port: port})
+		&deepscore.DataSlice{Key: sessionKey, Val: nil, Number: number, Flag: slice_flag, Host: callbackHost, Port: callbackPort})
 	sendOverEnd := time.Now()
 	fmt.Printf("send message cost time:%v\n", sendOverEnd.Sub(start))
 
@@ -107,10 +108,10 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 	responseEnd := time.Now()
 	fmt.Printf("total time include response is:%v\n", responseEnd.Sub(start))
 	if err != nil {
-		fmt.Fprintf(w, "%s\n", result)
-	} else {
 		fmt.Fprintf(w, "{}")
-		fmt.Println("%v", err)
+		fmt.Printf("%v", err)
+	} else {
+		fmt.Fprintf(w, "%s\n", result)
 	}
 }
 
@@ -130,7 +131,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("receive notify from key:%s!", sessionKey)
+	fmt.Printf("receive notify from key:%s!\n", sessionKey)
 
 	/*
 		if r.Method == "GET" {
@@ -154,7 +155,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 
 	err := SendNotify(sessionKey, message)
 	if err != nil {
-		errMsg := fmt.Sprintf("process message failed for key:%s!, err:%v", sessionKey, err)
+		errMsg := fmt.Sprintf("process message failed for key:%s!, \nerr:%v", sessionKey, err)
 		fmt.Fprintln(w, errMsg)
 		fmt.Println(errMsg)
 		return

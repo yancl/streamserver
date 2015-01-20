@@ -18,6 +18,10 @@ func getHostPort(addr string) (string, int32, error) {
 	return host, int32(port), err
 }
 
+func printUsage() {
+	fmt.Println("Usage:\n ./main -f config\n")
+}
+
 func main() {
 	//parser config
 	filenamePtr := flag.String("f", "", "conf file name for the server")
@@ -26,6 +30,7 @@ func main() {
 	conf, err := config.LoadConfig(*filenamePtr)
 	if err != nil {
 		fmt.Printf("parser conf file failed, filename:%s, err:%v\n", *filenamePtr, err)
+		printUsage()
 		return
 	}
 
@@ -42,13 +47,7 @@ func main() {
 	//init compute cells &request router
 	//acceptor.ReqRouter = &acceptor.RequestRouter{ComputeCellNum: uint32(computeCellNum), ComputeCells: computeCells}
 	acceptor.ReqRouter = &acceptor.RequestRouter{}
-	/*
-		var (
-			computeCellAddrs = conf.ComputeCellAddrs
-			computeCellNum   = len(computeCellAddrs)
-		)*/
 
-	//computeCells := make([]acceptor.ComputeCell, 0, computeCellNum)
 	for _, addr := range conf.ComputeCellAddrs {
 		connPool := acceptor.NewConnPool(acceptor.NewThriftConn, addr, conf.ConnPool.MaxActive, conf.ConnPool.MaxIdle, conf.ConnPool.Wait)
 		host, port, err := getHostPort(addr)

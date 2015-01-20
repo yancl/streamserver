@@ -13,11 +13,11 @@ type concurrentMap struct {
 }
 
 var notifier *concurrentMap
-var waitTimeout int = 30 //seconds
+var responseWaitTimeout int = 30 //seconds
 
 func InitNotifier(notifierSize int, waitTimeout int) {
 	notifier = &concurrentMap{m: make(map[string]chan string, notifierSize)}
-	waitTimeout = waitTimeout
+	responseWaitTimeout = waitTimeout
 }
 
 func (cm *concurrentMap) get(key string) (chan string, bool) {
@@ -55,7 +55,7 @@ func SendNotify(key string, message string) error {
 			return errors.New(fmt.Sprintf("send message to receiver [TIMEOUT] for key:%s \n", key))
 		}
 	}
-	return errors.New(fmt.Sprintf("send message not receiver [NOT FOUND] for key:%s \n", key))
+	return errors.New(fmt.Sprintf("send message to receiver [NOT FOUND] for key:%s \n", key))
 }
 
 func WaitForNotify(key string) (string, error) {
@@ -70,7 +70,7 @@ func WaitForNotify(key string) (string, error) {
 	select {
 	case msg := <-receiver:
 		return msg, nil
-	case <-time.After(time.Second * time.Duration(waitTimeout)):
-		return "", errors.New(fmt.Sprintf("wait respose timeout:(%d), key:%s \n", waitTimeout, key))
+	case <-time.After(time.Second * time.Duration(responseWaitTimeout)):
+		return "", errors.New(fmt.Sprintf("wait respose timeout:(%d), key:%s \n", responseWaitTimeout, key))
 	}
 }

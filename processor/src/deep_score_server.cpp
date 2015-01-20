@@ -44,9 +44,9 @@ int main(int argc, char **argv) {
       }
     }
 
-    // assume a non-option arg is a config file name
-    if (optind < argc && config_file.empty()) {
-      config_file = argv[optind];
+    if (config_file.empty()) {
+      print_usage(argv[0]);
+      exit(1);
     }
 
 

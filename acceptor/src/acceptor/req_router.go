@@ -51,7 +51,9 @@ func (rr *RequestRouter) SendMessage(sessionKey string, message []*deepscore.Dat
 			fmt.Println("retry succeed!, rv:%v\n", rv)
 		}
 		return err
+	} else if rv != 0 {
+		return errors.New(fmt.Sprintf("send message rv:%d for key:%s!\n", rv, sessionKey))
 	}
-	fmt.Printf("send message ok, rv:%v\n", rv)
+	//fmt.Printf("send message ok, rv:%v\n", rv)
 	return nil
 }
