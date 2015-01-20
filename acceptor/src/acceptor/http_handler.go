@@ -107,7 +107,8 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 		rsp.Code, rsp.Msg = -1, fmt.Sprintf("wait message failed for key:%s, err:%v\n", sessionKey, err)
 		goto end
 	}
-	rsp.Data = []byte(result)
+	//rsp.Data = []byte(result)
+	rsp.Data = result
 
 end:
 	var data []byte

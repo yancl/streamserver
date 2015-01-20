@@ -7,7 +7,8 @@ import (
 )
 
 func sendResponse(ws *websocket.Conn, code int, msg string, data string) {
-	var rsp = Response{Code: code, Msg: msg, Data: []byte(data)}
+	//var rsp = Response{Code: code, Msg: msg, Data: []byte(data)}
+	var rsp = Response{Code: code, Msg: msg, Data: data}
 	if err := websocket.JSON.Send(ws, rsp); err != nil {
 		fmt.Printf("send response failed, err:%v\n", err)
 		return
