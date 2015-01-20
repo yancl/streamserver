@@ -3,33 +3,61 @@ package main
 import (
 	"acceptor"
 	"config"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
+	"strconv"
+	"strings"
 )
 
 func main() {
-	config.LoadConfig()
+	filenamePtr := flag.String("f", "", "conf file name for the server")
+	flag.Parse()
+
+	conf, err := config.LoadConfig(*filenamePtr)
+	if err != nil {
+		fmt.Printf("parser conf file failed, filename:%s, err:%v\n", *filenamePtr, err)
+		return
+	}
 
 	//init global notify map
-	acceptor.KeyChannelMapper = make(map[string]chan string)
-	acceptor.KeyChannelMutex = &sync.Mutex{}
+	acceptor.InitGlobalMap(conf.MapSize)
+
+	var (
+		computeCellAddrs = conf.ComputeCellAddrs
+		computeCellNum   = len(computeCellAddrs)
+	)
+
+	computeCells := make([]acceptor.ComputeCell, 0, computeCellNum)
+	for _, addr := range computeCellAddrs {
+		connPool := acceptor.NewConnPool(acceptor.NewThriftConn, addr, conf.ConnPool.MaxActive, conf.ConnPool.MaxIdle, conf.ConnPool.Wait)
+		hostport := strings.Split(addr, ":")
+		host := hostport[0]
+		port, err := strconv.Atoi(hostport[1])
+		if err != nil {
+			fmt.Printf("parse host port:%s failed, err:%v\n", hostport, err)
+			return
+		}
+		computeCells = append(computeCells, acceptor.ComputeCell{Host: host, Port: port, Pool: connPool})
+	}
 
 	//init request router
-	computeCells := make([]acceptor.ComputeCell, 0, 2)
+	acceptor.ReqRouter = &acceptor.RequestRouter{ComputeCellNum: uint32(computeCellNum), ComputeCells: computeCells}
 
-	//func NewConnPool(newFn func(addr string) (Conn, error), addr string, maxIdle int, maxActive int, wait bool) *ConnPool {
-	connPool := acceptor.NewConnPool(acceptor.NewThriftConn, "127.0.0.1:1463", 10, 10, true)
-	computeCells = append(computeCells, acceptor.ComputeCell{Host: "127.0.0.1", Port: 1463, Pool: connPool})
-	connPool2 := acceptor.NewConnPool(acceptor.NewThriftConn, "127.0.0.1:1463", 10, 10, true)
-	computeCells = append(computeCells, acceptor.ComputeCell{Host: "127.0.0.1", Port: 1463, Pool: connPool2})
-	acceptor.ReqRouter = &acceptor.RequestRouter{ComputeCellNum: 2, ComputeCells: computeCells}
+	//dispatch requests to different servers
+	ClientReqServeMux := http.NewServeMux()
+	ClientReqServeMux.HandleFunc("/upload_all", acceptor.UploadAll)
+	ClientReqServeMux.HandleFunc("/upload", acceptor.UploadStream)
 
-	http.HandleFunc("/upload_all", acceptor.UploadAll)
-	http.HandleFunc("/upload", acceptor.UploadStream)
-	http.HandleFunc("/notify", acceptor.Notify)
+	CallbackReqServeMux := http.NewServeMux()
+	CallbackReqServeMux.HandleFunc("/notify", acceptor.Notify)
 
-	fmt.Printf("start acceptor at 127.0.0.1:8081!\n")
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	go func() {
+		fmt.Printf("start acceptor callback server at [%s]!\n", conf.ServerCallbackAddr)
+		log.Fatal(http.ListenAndServe(conf.ServerCallbackAddr, CallbackReqServeMux))
+	}()
+
+	fmt.Printf("start acceptor serve server at [%s]!\n", conf.ServerServeAddr)
+	log.Fatal(http.ListenAndServe(conf.ServerServeAddr, ClientReqServeMux))
 }

@@ -35,12 +35,12 @@ type ConnPool struct {
 	//the pool only for the addr
 	Addr string
 
-	// Maximum number of idle connections in the pool.
-	MaxIdle int
-
 	// Maximum number of connections allocated by the pool at a given time.
 	// When zero, there is no limit on the number of connections in the pool.
 	MaxActive int
+
+	// Maximum number of idle connections in the pool.
+	MaxIdle int
 
 	// Close connections after remaining idle for this duration. If the value
 	// is zero, then idle connections are not closed. Applications should set
@@ -68,8 +68,8 @@ type idleConn struct {
 
 // NewConnPool creates a new pool. This function is deprecated. Applications should
 // initialize the *ConnPool fields directly as shown in example.
-func NewConnPool(newFn func(addr string) (*ThriftConn, error), addr string, maxIdle int, maxActive int, wait bool) *ConnPool {
-	return &ConnPool{Dial: newFn, Addr: addr, MaxIdle: maxIdle, MaxActive: maxActive, Wait: wait}
+func NewConnPool(newFn func(addr string) (*ThriftConn, error), addr string, maxActive int, maxIdle int, wait bool) *ConnPool {
+	return &ConnPool{Dial: newFn, Addr: addr, MaxActive: maxActive, MaxIdle: maxIdle, Wait: wait}
 }
 
 // Get gets a connection. The application must close the returned connection.

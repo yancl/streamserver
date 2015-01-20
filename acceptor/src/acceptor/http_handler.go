@@ -18,12 +18,12 @@ const CHUNK_SIZE = 4 * 1024
 
 func waitForNotify(key string) string {
 	receiver := make(chan string, 1)
-	if AddKeyChanToMap(key, receiver) == false {
+	if GlobalMap.Add(key, receiver) == false {
 		return fmt.Sprintf("key already in map, key:%s", key)
 	}
 
 	//release resource
-	defer DelKeyChanFromMap(key)
+	defer GlobalMap.Delete(key)
 
 	var result string
 
@@ -37,7 +37,7 @@ func waitForNotify(key string) string {
 }
 
 func sendNotify(key string, message string) bool {
-	receiver, exsit := GetKeyChanFromMap(key)
+	receiver, exsit := GlobalMap.Get(key)
 	if exsit {
 		// in normal scene it will block sender
 		// but for robust, add it to select block

@@ -8,7 +8,7 @@ import (
 
 type ComputeCell struct {
 	Host string
-	Port uint32
+	Port int
 	Pool *ConnPool
 }
 

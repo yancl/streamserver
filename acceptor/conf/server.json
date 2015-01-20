@@ -1,0 +1,11 @@
+{
+  "ServerServeAddr":"127.0.0.1:8081",
+  "ServerCallbackAddr":"127.0.0.1:8082",
+  "MapSize":10000,
+  "ComputeCellAddrs":["127.0.0.1:1463"],
+  "ConnPool": {
+    "MaxActive": 10,
+    "MaxIdle": 10,
+    "Wait": true
+  }
+}
