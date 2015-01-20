@@ -43,6 +43,19 @@ func (cm *concurrentMap) del(key string) {
 	delete(cm.m, key)
 }
 
+func RegisterNotify(key string) error {
+	receiver := make(chan string, 1)
+	if notifier.add(key, receiver) == false {
+		return errors.New(fmt.Sprintf("key already in map, key:%s \n", key))
+	}
+	return nil
+}
+
+func UnRegisterNotify(key string) error {
+	notifier.del(key)
+	return nil
+}
+
 func SendNotify(key string, message string) error {
 	receiver, exsit := notifier.get(key)
 	if exsit {
@@ -59,12 +72,11 @@ func SendNotify(key string, message string) error {
 }
 
 func WaitForNotify(key string) (string, error) {
-	receiver := make(chan string, 1)
-	if notifier.add(key, receiver) == false {
-		return "", errors.New(fmt.Sprintf("key already in map, key:%s \n", key))
+	receiver, exsit := notifier.get(key)
+	if exsit == false {
+		return "", errors.New(fmt.Sprintf("wait for key:%s failed, [NOT FOUND]\n", key))
 	}
 
-	//release resource
 	defer notifier.del(key)
 
 	select {

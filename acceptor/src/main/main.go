@@ -43,7 +43,8 @@ func main() {
 		fmt.Printf("parse host port:%s failed, err:%v\n", conf.ServerCallbackAddr, err)
 		return
 	}
-	acceptor.InitHandlerParams(conf.ChunkSize, host, port)
+	acceptor.InitHttpHandlerParams(conf.ChunkSize)
+	acceptor.InitCallbackParams(host, port)
 
 	//init compute cells &request router
 	//acceptor.ReqRouter = &acceptor.RequestRouter{ComputeCellNum: uint32(computeCellNum), ComputeCells: computeCells}

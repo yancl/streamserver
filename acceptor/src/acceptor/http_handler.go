@@ -13,23 +13,10 @@ import (
 
 var (
 	processChunkSize int
-	callbackHost     string
-	callbackPort     int32
 )
 
-func InitHandlerParams(chunkSize int, host string, port int32) {
+func InitHttpHandlerParams(chunkSize int) {
 	processChunkSize = chunkSize
-	callbackHost = host
-	callbackPort = port
-}
-
-func sendMessage(sessionKey string, message *deepscore.DataSlice) error {
-	//compose messages
-	length := 0
-	capacity := 1
-	messages := make([]*deepscore.DataSlice, length, capacity)
-	messages = append(messages, message)
-	return ReqRouter.SendMessage(sessionKey, messages)
 }
 
 func UploadStream(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +52,11 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 			}
 			if formname == "session_key" {
 				sessionKey = string(buffer[0:size])
+
+				if err := RegisterNotify(sessionKey); err != nil {
+					fmt.Printf("register notify failed, err:%v\n", err)
+					return
+				}
 			}
 			continue
 		}
@@ -77,8 +69,8 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			if sessionKey != "" {
-				err := sendMessage(sessionKey,
-					&deepscore.DataSlice{Key: sessionKey, Val: buffer[0:size], Number: number, Flag: slice_flag, Host: callbackHost, Port: callbackPort})
+
+				err := SendMessage(sessionKey, &Message{seq: number, flag: slice_flag, data: buffer[0:size]})
 				if err != nil {
 					fmt.Printf("send message failed for key:%s, err:%v\n", sessionKey, err)
 					return
@@ -99,8 +91,7 @@ func UploadStream(w http.ResponseWriter, r *http.Request) {
 
 	//send last message
 	slice_flag = deepscore.SliceFlag_FINISH
-	err = sendMessage(sessionKey,
-		&deepscore.DataSlice{Key: sessionKey, Val: nil, Number: number, Flag: slice_flag, Host: callbackHost, Port: callbackPort})
+	err = SendMessage(sessionKey, &Message{seq: number, flag: slice_flag, data: nil})
 	sendOverEnd := time.Now()
 	fmt.Printf("send message cost time:%v\n", sendOverEnd.Sub(start))
 
