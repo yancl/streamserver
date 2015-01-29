@@ -60,12 +60,9 @@ void deepscore::ComputeUnit::computeMessage() {
         gettimeofday(&start, NULL);
 
         //compute code
-        const char* resource_type = "NNET";
-        const char* resource_conf = "/home/yxf/testbed/nnet.config";
-        const char* qid = "IS20001";
-        dos = DeepOpenScorerNew(resource_type);
-        DeepOpenScorerStart(dos, resource_conf);
-        DeepOpenScorerSetQid(dos, qid);
+        dos = DeepOpenScorerNew(g_Resource->type);
+        DeepOpenScorerStart(dos, g_Resource->path);
+        DeepOpenScorerSetQid(dos, g_Resource->qid);
 
       } else if (slice->_flag == SliceFlag::MIDDLE) {
         if (!meet_message_begin) {
@@ -90,14 +87,14 @@ void deepscore::ComputeUnit::computeMessage() {
 
         gettimeofday(&end, NULL);
         unsigned long timeuse = 1000 * ( end.tv_sec - start.tv_sec ) + (end.tv_usec - start.tv_usec)/1000;
-        std::cout << "cost:(" << timeuse << ")ms" << std::endl;
+        //std::cout << "cost:(" << timeuse << ")ms" << std::endl;
 
         //LOG(DEBUG) << "finish to process message for key:" << slice._key;
         LOG(INFO) << "finish to process message for key:" << slice->_key;
 
 
         std::string message = std::string(result);
-        std::cout << "output:" << message << std::endl;
+        //std::cout << "output:" << message << std::endl;
         sendJsonResponse(slice->_host, slice->_port, slice->_key, message);
         break;
       } else if (slice->_flag == SliceFlag::BROKEN) {

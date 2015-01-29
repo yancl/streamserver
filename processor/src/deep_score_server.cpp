@@ -2,12 +2,14 @@
 #include "include/callback.h"
 #include "include/compute_unit.h"
 #include "include/stream_handler.h"
+#include "include/resource.h"
 
 using boost::shared_ptr;
 using namespace deepscore;
 
 shared_ptr<StreamHandler> deepscore::g_Handler;
 const deepscore::Slice* deepscore::g_SlicePtr;
+const deepscore::Resource* deepscore::g_Resource;
 
 void print_usage(const char* program_name) {
   std::cout << "Usage: " << program_name << " [-f config_file]" << std::endl;
@@ -57,6 +59,10 @@ int main(int argc, char **argv) {
     iniParser.init(config_file);
     FLAGS_log_dir = iniParser.getStrValue("Logger.log_dir");
     int port = iniParser.getIntValue("Server.port");
+
+    deepscore::g_Resource = new deepscore::Resource(iniParser.getStrValue("Resource.path"), \
+      iniParser.getStrValue("Resource.type"), \
+      iniParser.getStrValue("Resource.qid") );
 
     //init logger
     google::InitGoogleLogging(argv[0]);

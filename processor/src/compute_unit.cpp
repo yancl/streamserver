@@ -78,7 +78,7 @@ void deepscore::ComputeUnit::computeMessage() {
 
         gettimeofday(&end, NULL);
         unsigned long timeuse = 1000 * ( end.tv_sec - start.tv_sec ) + (end.tv_usec - start.tv_usec)/1000;
-        std::cout << "cost:(" << timeuse << ")ms" << std::endl;
+        //std::cout << "cost:(" << timeuse << ")ms" << std::endl;
 
         std::string message = "OK!";
         sendJsonResponse(slice->_host, slice->_port, slice->_key, message);
